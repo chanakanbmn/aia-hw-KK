@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BX Price Ticker</title>
+<style>
+:root{--bg:#0b0a08;--card:#16130d;--line:#3a2f17;--gold:#e8c26a;--text:#f1ead8;--mute:#a89c80;--buy:#6fcf97;--hold:#e8c26a;--trim:#e29a5a;--review:#eb7a6a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Noto Sans Thai",system-ui,sans-serif;display:flex;justify-content:center}
+.wrap{width:100%;max-width:560px;padding:20px 16px 40px}
+h1{margin:0;font-size:20px;color:var(--gold)}
+.sub{color:var(--mute);font-size:12px;margin:2px 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:12px}
+.price{font-size:48px;font-weight:700;line-height:1}
+.chg{font-size:14px;margin-left:8px}
+.zone{margin-top:14px;padding:12px;border-radius:10px;font-weight:700;font-size:18px;color:#000;text-align:center}
+.msg{margin-top:10px;font-size:14px}
+.bar{position:relative;height:14px;border-radius:7px;overflow:hidden;display:flex;margin-top:18px}
+.bar div{height:100%}
+.mark{position:absolute;top:-4px;width:3px;height:22px;background:#fff;border-radius:2px;transform:translateX(-1px)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+td{padding:5px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.note{color:var(--mute);font-size:11px;margin-top:10px}
+.err{color:var(--review);font-size:13px;margin-top:10px}
+.alert{display:none;margin-top:12px;padding:12px;border-radius:10px;background:var(--buy);color:#000;font-weight:700;text-align:center}
+.alert.on{display:block}
+button{background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">BX</h1>
+  <div class="sub">เทียบราคากับโซนจาก notes/BX.md · กรอบวิเคราะห์ ไม่ใช่คำแนะนำลงทุนส่วนบุคคล</div>
+
+  <div class="alert" id="alert">🔔 ราคาลงมาถึงจุดเข้าซื้อแล้ว</div>
+
+  <div class="card">
+    <div><span class="price" id="price">–</span><span class="chg" id="chg"></span></div>
+    <div class="zone" id="zone">กำลังโหลด…</div>
+    <div class="msg" id="msg"></div>
+    <div class="bar" id="bar"></div>
+    <div class="scale"><span>$0</span><span id="scaleMax"></span></div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card">
+    <table id="levels"></table>
+    <div class="note" id="note"></div>
+    <button id="sound">เปิดเสียงเตือน (เมื่อเปิดหน้านี้ไว้)</button>
+  </div>
+</div>
+<script>
+const REFRESH_MS = 60000;
+let zones = null, soundOn = false, alerted = false;
+
+const fmt = n => '$' + n.toFixed(2);
+function zoneOf(p, z) {
+  if (p <= z.buy_max) return {k: 'buy', t: 'โซนซื้อ/สะสม', c: 'var(--buy)'};
+  if (p < z.hold_max) return {k: 'hold', t: 'ถือ/เฝ้าดู (ยังไม่ถึงจุดซื้อ)', c: 'var(--hold)'};
+  if (p < z.review_min) return {k: 'trim', t: 'โซนทยอยลด', c: 'var(--trim)'};
+  return {k: 'review', t: 'ทบทวนเต็มที่', c: 'var(--review)'};
+}
+function beep() {
+  try {
+    const a = new AudioContext(), o = a.createOscillator();
+    o.connect(a.destination); o.frequency.value = 880; o.start(); o.stop(a.currentTime + 0.4);
+  } catch (e) {}
+}
+function drawBar(z, p) {
+  const max = Math.ceil(z.bull * 1.05 / 10) * 10;
+  const w = v => (v / max * 100) + '%';
+  document.getElementById('bar').innerHTML =
+    `<div style="width:${w(z.buy_max)};background:var(--buy)"></div>` +
+    `<div style="width:${w(z.hold_max - z.buy_max)};background:var(--hold)"></div>` +
+    `<div style="width:${w(z.review_min - z.hold_max)};background:var(--trim)"></div>` +
+    `<div style="width:${w(max - z.review_min)};background:var(--review)"></div>` +
+    (p == null ? '' : `<span class="mark" style="left:${Math.min(p / max * 100, 100)}%"></span>`);
+  document.getElementById('scaleMax').textContent = '$' + max;
+}
+function drawLevels(z) {
+  document.getElementById('levels').innerHTML =
+    `<tr><td>ซื้อเมื่อ ≤</td><td>${fmt(z.buy_max)}</td></tr>` +
+    `<tr><td>ทยอยลดเมื่อ ≥</td><td>${fmt(z.hold_max)}</td></tr>` +
+    `<tr><td>ทบทวนเต็มที่เมื่อ ≥</td><td>${fmt(z.review_min)}</td></tr>` +
+    `<tr><td>มูลค่า Bear / Base / Bull</td><td>${fmt(z.bear)} / ${fmt(z.base)} / ${fmt(z.bull)}</td></tr>`;
+  document.getElementById('note').textContent =
+    `โซนอัปเดต ${z.updated} · ที่มา: ${z.source}`;
+}
+async function refresh() {
+  const err = document.getElementById('err');
+  try {
+    const r = await fetch('/api/price');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    const z = zones, p = d.price, zn = zoneOf(p, z);
+    document.getElementById('price').textContent = fmt(p);
+    if (d.prev_close) {
+      const ch = (p / d.prev_close - 1) * 100;
+      const el = document.getElementById('chg');
+      el.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+      el.style.color = ch >= 0 ? 'var(--buy)' : 'var(--review)';
+    }
+    const zEl = document.getElementById('zone');
+    zEl.textContent = zn.t; zEl.style.background = zn.c;
+    let msg;
+    if (zn.k === 'buy') msg = `ต่ำกว่าจุดซื้อ ${fmt(z.buy_max)} อยู่ ${((1 - p / z.buy_max) * 100).toFixed(1)}%`;
+    else msg = `ต้องลงอีก ${fmt(p - z.buy_max)} (${((1 - z.buy_max / p) * 100).toFixed(1)}%) ถึงจะถึงจุดซื้อ ${fmt(z.buy_max)}`;
+    document.getElementById('msg').textContent = msg;
+    drawBar(z, p);
+    const isBuy = zn.k === 'buy';
+    document.getElementById('alert').classList.toggle('on', isBuy);
+    document.title = (isBuy ? '🔔 ' : '') + z.ticker + ' ' + fmt(p);
+    if (isBuy && !alerted && soundOn) beep();
+    alerted = isBuy;
+    const t = d.market_time ? new Date(d.market_time * 1000).toLocaleString('th-TH') : '–';
+    err.textContent = '';
+    document.getElementById('note').textContent =
+      `ราคา ณ ${t} · ${d.source} · โซนอัปเดต ${z.updated} · ที่มา: ${z.source}`;
+  } catch (e) {
+    err.textContent = 'ดึงราคาไม่สำเร็จ: ' + e.message + ' (ลองใหม่อัตโนมัติทุก 1 นาที)';
+  }
+}
+document.getElementById('sound').onclick = e => {
+  soundOn = !soundOn; e.target.textContent = soundOn ? 'เสียงเตือนเปิดอยู่ (คลิกเพื่อปิด)' : 'เปิดเสียงเตือน (เมื่อเปิดหน้านี้ไว้)';
+  if (soundOn) beep();
+};
+(async () => {
+  zones = await (await fetch('/api/zones')).json();
+  document.getElementById('title').textContent = `${zones.name} (${zones.ticker}) — ติดตามจุดเข้าซื้อ`;
+  drawBar(zones, null); drawLevels(zones);
+  refresh(); setInterval(refresh, REFRESH_MS);
+})();
+</script>
+</body>
+</html>

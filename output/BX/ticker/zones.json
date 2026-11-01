@@ -1,0 +1,12 @@
+{
+  "ticker": "BX",
+  "name": "Blackstone",
+  "buy_max": 99,
+  "hold_max": 150,
+  "review_min": 165,
+  "bear": 77,
+  "base": 132.3,
+  "bull": 189,
+  "updated": "2026-11-01",
+  "source": "notes/BX.md หัวข้อ 3 และ 6 (สมมติฐานผู้วิเคราะห์ status: draft)"
+}
