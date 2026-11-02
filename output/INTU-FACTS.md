@@ -142,6 +142,11 @@ status: draft
 | 123 | P/E ย้อนหลัง [คำนวณ: 341.09 / 16.46] | ประมาณ 20.7 | เท่า | ราคา 30 ต.ค. 2026 / EPS เจือจาง FY2026 | [คำนวณ] | 2 |
 | 124 | FCF yield [คำนวณ: 8,617 / 91,152] | ประมาณ 9.5% (หลังหัก SBC: 6,561/91,152 ประมาณ 7.2%) | % | FY2026 / ราคา 30 ต.ค. 2026 | [คำนวณ] ; FCF FY2026 สูงจากภาษีเงินสดต่ำ | 2 |
 | 125 | Dividend yield [คำนวณ: 4.80/341.09 และ 5.52/341.09] | 1.41% (ย้อนหลัง) / 1.62% (อัตรา 1.38 x 4) | % | ราคา 30 ต.ค. 2026 | [คำนวณ] | 2 |
+| 126 | รายได้ FY2022 และกำไรดำเนินงาน FY2023 | รายได้ FY2022 12,726 ; กำไรดำเนินงาน FY2023 3,141 (รายได้ FY2023 14,368 = #2) | ล้านUSD | FY2022 / FY2023 | cf: Revenues (FY22) ; cf: OperatingIncomeLoss (FY23) ; ผู้ตรวจ factcheck ยืนยัน (แถว 40 ของ INTU-factcheck.md) | 1 |
+| 127 | รายได้ไตรมาส 4 FY2025 [คำนวณ: 18,831 - 15,000 โดย 15,000 = รายได้ 9 เดือน FY2025 ใน #25] | 3,831 | ล้านUSD | Q4 FY2025 | [คำนวณ] จาก #1 และ #25 (Q3 งบกำไรขาดทุน บ.188-219) ; factcheck แถว 41 ยืนยัน 4,354 vs 3,831 | 1 |
+| 128 | เนื้อความ FTC ใน 10-K ฉบับ FY2026 | "vacated the FTC's order and remanded the case to the FTC" ; "On August 31, 2026, we filed a motion ... seeking the dismissal of the remaining lawsuit brought by the FTC as moot. The FTC has agreed not to oppose this motion" | - | 20 มี.ค. 2026 / 31 ส.ค. 2026 | K26 Note 13 บ.3159 (อ้างจาก factcheck แถว 50 ไม่ได้เปิด 10-K ซ้ำ เพราะไม่พบโฟลเดอร์ data/INTU ในเครื่อง) | 1 |
+| 129 | ข้อตกลง 50 รัฐ จ่ายจริง และ deferred comp | จ่ายเต็มจำนวนในไตรมาสสิ้น 31 ม.ค. 2023 ; กำไรสุทธิจากสินทรัพย์แผน deferred comp 39 (FY25: 24) | - | - | K26 บ.3160-3161 ; K26 บ.1284, 1290 (อ้างจาก factcheck แถว 52, 58) | 1 |
+| 130 | แผนขาย 10b5-1 | 8-K ระบุ "On March 16, 2026, Intuit Inc. announced that its founder and its executive leadership team terminated all of their outstanding pre-scheduled stock sales plans" 16 มี.ค. คือวันประกาศ ไม่ระบุวันยกเลิกจริง | - | 16 มี.ค. 2026 | 8-K_2026-03-16 บ.42 (factcheck แถว 48) | 1 |
 
 ## หมายเหตุขัดกัน / ข้อควรระวัง
 - ส่วนงานถูกจัดใหม่ใน K26 (รวม Consumer + Credit Karma + ProTax เป็น Consumer ตั้งแต่ 1 ส.ค. 2025) ตัวเลข FY2025 ใน K25 กับ K26 ต่างกัน ห้ามเทียบข้ามฉบับ
