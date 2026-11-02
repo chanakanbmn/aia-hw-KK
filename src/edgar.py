@@ -98,7 +98,12 @@ def shares_outstanding(facts: dict):
         r
         for r in facts.get("facts", {}).get("dei", {}).get("EntityCommonStockSharesOutstanding", {}).get("units", {}).get("shares", [])
     ]
-    return max(rows, key=lambda r: r["end"])["val"] if rows else None
+    if rows:
+        return max(rows, key=lambda r: r["end"])["val"]
+    # บริษัทหลายคลาสหุ้นไม่มีค่ารวมใน dei ใช้ค่าเฉลี่ยถ่วงน้ำหนักแบบ diluted ของงวดล่าสุดแทน
+    w = facts.get("facts", {}).get("us-gaap", {}).get("WeightedAverageNumberOfDilutedSharesOutstanding", {}).get("units", {}).get("shares", [])
+    w = [r for r in w if r.get("form") in FORMS]
+    return max(w, key=lambda r: r["end"])["val"] if w else None
 
 
 def ttm_metrics(facts: dict, as_of: str | None = None, cutoff: str | None = None) -> dict:
@@ -108,10 +113,14 @@ def ttm_metrics(facts: dict, as_of: str | None = None, cutoff: str | None = None
     latest = _latest_period(ocf_rows)
 
     def ttm(tags):
-        rows = _rows(facts, tags)
-        # ใช้งวดล่าสุดเดียวกับ OCF เพื่อให้ตัวเลขเทียบกันได้
-        match = _near(rows, _d(latest["start"]), _d(latest["end"])) if latest else None
-        return _ttm(rows, match)
+        # ใช้งวดล่าสุดเดียวกับ OCF เพื่อให้ตัวเลขเทียบกันได้ ลอง tag ถัดไปถ้า tag แรกไม่มีงวดนี้
+        for tag in tags:
+            rows = _rows(facts, [tag])
+            match = _near(rows, _d(latest["start"]), _d(latest["end"])) if latest and rows else None
+            v = _ttm(rows, match)
+            if v is not None:
+                return v
+        return None
 
     ocf, capex, sbc, revenue = ttm(OCF_TAGS), ttm(CAPEX_TAGS), ttm(SBC_TAGS), ttm(REVENUE_TAGS)
 
@@ -121,16 +130,17 @@ def ttm_metrics(facts: dict, as_of: str | None = None, cutoff: str | None = None
 
     # โตเทียบงวดเดียวกันของปีก่อน (YTD ปีนี้ / YTD ปีก่อน) ไม่ใช่ TTM ต่อ TTM
     growth = None
-    rev_rows = _rows(facts, REVENUE_TAGS)
-    if latest and rev_rows:
-        cur = _near(rev_rows, _d(latest["start"]), _d(latest["end"]))
+    for tag in REVENUE_TAGS if latest else []:
+        rev_rows = _rows(facts, [tag])
+        cur = _near(rev_rows, _d(latest["start"]), _d(latest["end"])) if rev_rows else None
         prev = _near(
             rev_rows,
             _d(latest["start"]).replace(year=_d(latest["start"]).year - 1),
             _d(latest["end"]).replace(year=_d(latest["end"]).year - 1),
-        )
+        ) if cur else None
         if cur and prev and prev["val"]:
             growth = cur["val"] / prev["val"] - 1
+            break
 
     cik = facts.get("cik")
     return {

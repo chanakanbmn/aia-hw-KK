@@ -116,3 +116,27 @@ def test_shares_outstanding_latest():
     }
     assert shares_outstanding(facts) == 100
     assert shares_outstanding(make_facts()) is None
+
+
+def test_revenue_falls_through_to_next_tag_when_first_has_no_matching_period():
+    facts = copy.deepcopy(make_facts())
+    gaap = facts["facts"]["us-gaap"]
+    # tag แรกมีแต่ข้อมูลเก่า (ปีบัญชีเก่า) งวดล่าสุดไม่ตรง
+    gaap["Revenues"] = {"units": {"USD": [_e("2019-01-01", "2019-12-31", 1, "10-K")]}}
+    gaap["RevenueFromContractWithCustomerExcludingAssessedTax"] = make_facts()["facts"]["us-gaap"]["Revenues"]
+    m = ttm_metrics(facts, as_of="2026-11-02")
+    assert m["revenue"] == 5500
+    assert m["revenue_growth_yoy"] == pytest.approx(0.2)
+
+
+def test_shares_falls_back_to_weighted_average_diluted():
+    from src.edgar import shares_outstanding
+
+    facts = make_facts()
+    facts["facts"]["us-gaap"]["WeightedAverageNumberOfDilutedSharesOutstanding"] = {
+        "units": {"shares": [
+            {"start": "2025-01-01", "end": "2025-03-31", "val": 95, "form": "10-Q"},
+            {"start": "2025-04-01", "end": "2025-06-30", "val": 105, "form": "10-Q"},
+        ]}
+    }
+    assert shares_outstanding(facts) == 105
