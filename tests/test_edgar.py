@@ -92,3 +92,27 @@ def test_missing_user_agent_raises(monkeypatch):
     monkeypatch.delenv("SEC_USER_AGENT", raising=False)
     with pytest.raises(RuntimeError, match="SEC_USER_AGENT"):
         fetch_companyfacts("0000000123")
+
+
+def test_cutoff_uses_only_periods_ending_on_or_before_cutoff():
+    m = ttm_metrics(make_facts(), as_of="2026-11-02", cutoff="2024-12-31")
+    assert m["period_end"] == "2024-12-31"
+    assert m["fcf_after_sbc"] == 1000 - 100 - 300
+    assert m["cash"] == 700
+    assert m["debt"] is None
+
+
+def test_shares_outstanding_latest():
+    from src.edgar import shares_outstanding
+
+    facts = make_facts()
+    facts["facts"]["dei"] = {
+        "EntityCommonStockSharesOutstanding": {
+            "units": {"shares": [
+                {"end": "2025-01-31", "val": 90, "form": "10-K"},
+                {"end": "2025-07-31", "val": 100, "form": "10-Q"},
+            ]}
+        }
+    }
+    assert shares_outstanding(facts) == 100
+    assert shares_outstanding(make_facts()) is None

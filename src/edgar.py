@@ -84,7 +84,26 @@ def _instant(facts: dict, tags: list[str]):
     return max(rows, key=lambda r: r["end"])["val"]
 
 
-def ttm_metrics(facts: dict, as_of: str | None = None) -> dict:
+def _cut(facts: dict, cutoff: str) -> dict:
+    """สำเนา facts ที่เหลือเฉพาะรายการที่งวดจบ ณ หรือก่อนวัน cutoff"""
+    gaap = {
+        tag: {"units": {u: [r for r in rows if r["end"] <= cutoff] for u, rows in body.get("units", {}).items()}}
+        for tag, body in facts.get("facts", {}).get("us-gaap", {}).items()
+    }
+    return {**facts, "facts": {**facts.get("facts", {}), "us-gaap": gaap}}
+
+
+def shares_outstanding(facts: dict):
+    rows = [
+        r
+        for r in facts.get("facts", {}).get("dei", {}).get("EntityCommonStockSharesOutstanding", {}).get("units", {}).get("shares", [])
+    ]
+    return max(rows, key=lambda r: r["end"])["val"] if rows else None
+
+
+def ttm_metrics(facts: dict, as_of: str | None = None, cutoff: str | None = None) -> dict:
+    if cutoff:
+        facts = _cut(facts, cutoff)
     ocf_rows = _rows(facts, OCF_TAGS)
     latest = _latest_period(ocf_rows)
 
