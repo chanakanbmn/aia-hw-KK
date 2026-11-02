@@ -44,3 +44,15 @@ def test_history_multiples_uses_fundamentals_known_at_each_date():
 def test_history_multiples_skips_undefined_points():
     # ไม่มีงวดที่จบก่อน cutoff -> ข้ามจุดนั้น ไม่ crash
     assert history_multiples(make_facts(), [("2020-01-01", 10.0)], 100, "ev_fcf") == []
+
+
+def test_thin_fcf_margin_falls_back_to_ev_sales():
+    # FCF 100 / รายได้ 5500 = 1.8% ต่ำกว่า 10% -> ใช้ EV/Sales แม้ FCF เป็นบวก
+    r = multiples(10.0, 100, {**M, "fcf_after_sbc": 100})
+    assert r["basis"] == "ev_sales"
+    assert r["ev_fcf"] is not None  # ยังคำนวณให้ดูได้ แต่ไม่ใช้เป็นตัววัด
+
+
+def test_margin_exactly_10_percent_keeps_ev_fcf():
+    r = multiples(10.0, 100, {**M, "fcf_after_sbc": 550})
+    assert r["basis"] == "ev_fcf"

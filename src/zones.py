@@ -3,6 +3,7 @@ import statistics
 
 from src.edgar import ttm_metrics
 
+MIN_FCF_MARGIN = 0.10  # FCF/รายได้ ต่ำกว่านี้ EV/FCF ไม่เสถียร ใช้ EV/Sales แทน
 MIN_HISTORY = 8  # ไตรมาส ต่ำกว่านี้ไม่ตั้งโซน
 PERCENTILES = {"level1": 25, "level2": 15, "level3": 5}
 
@@ -17,7 +18,8 @@ def multiples(price: float, shares: float, m: dict) -> dict:
     fcf, rev = m.get("fcf_after_sbc"), m.get("revenue")
     ev_fcf = ev / fcf if fcf and fcf > 0 else None
     ev_sales = ev / rev if rev and rev > 0 else None
-    return {"ev_fcf": ev_fcf, "ev_sales": ev_sales, "basis": "ev_fcf" if ev_fcf is not None else "ev_sales"}
+    thick = ev_fcf is not None and rev and fcf / rev >= MIN_FCF_MARGIN
+    return {"ev_fcf": ev_fcf, "ev_sales": ev_sales, "basis": "ev_fcf" if thick else "ev_sales"}
 
 
 def buy_zones(history: list[float]) -> dict | None:
