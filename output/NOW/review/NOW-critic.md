@@ -4,7 +4,7 @@ type: note
 created: 2026-11-02
 updated: 2026-11-02
 tags: [NOW, ตรวจตรรกะ]
-sources: [NOW-deepdive-2026-11-02.html]
+sources: [../NOW-deepdive-2026-11-02.html]
 status: draft
 ---
 

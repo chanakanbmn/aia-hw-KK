@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INTU Price Ticker</title>
+<style>
+:root{--bg:#0b0a08;--card:#16130d;--line:#3a2f17;--gold:#e8c26a;--text:#f1ead8;--mute:#a89c80;--z3:#2f7f9f;--z2:#5fb3d9;--z1:#a9d8ee;--out:#3a2f17;--bad:#eb7a6a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Noto Sans Thai",system-ui,sans-serif;display:flex;justify-content:center}
+.wrap{width:100%;max-width:560px;padding:20px 16px 40px}
+h1{margin:0;font-size:20px;color:var(--gold)}
+.sub{color:var(--mute);font-size:12px;margin:2px 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:12px}
+.price{font-size:48px;font-weight:700;line-height:1}
+.chg{font-size:14px;margin-left:8px}
+.zone{margin-top:14px;padding:12px;border-radius:10px;font-weight:700;font-size:18px;color:#000;text-align:center;background:var(--out)}
+.msg{margin-top:10px;font-size:14px}
+.lbl{font-size:12px;color:var(--mute);margin-top:16px}
+.bar{position:relative;height:14px;border-radius:7px;overflow:hidden;display:flex;margin-top:6px}
+.bar div{height:100%}
+.barwrap{position:relative}
+.mark{position:absolute;top:-4px;width:3px;height:22px;background:#fff;border-radius:2px;transform:translateX(-1px)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th{font-size:11px;color:var(--mute);font-weight:600;text-align:right;padding:4px 0}
+th:first-child{text-align:left}
+td{padding:5px 0;border-bottom:1px solid var(--line)}
+td:not(:first-child){text-align:right}
+.note{color:var(--mute);font-size:11px;margin-top:10px}
+.err{color:var(--bad);font-size:13px;margin-top:10px}
+.warnbox{border:1px dashed var(--bad);color:var(--bad);border-radius:10px;padding:8px 12px;font-size:12px;margin-top:12px}
+.warnbox p{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">INTU</h1>
+  <div class="sub">เทียบราคากับโซนตามกฎ watchlist · ป้ายสถานะ ไม่ใช่สัญญาณซื้อขาย · ไม่ใช่คำแนะนำลงทุน</div>
+
+  <div class="card">
+    <div><span class="price" id="price">–</span><span class="chg" id="chg"></span></div>
+    <div class="zone" id="zone">กำลังโหลด…</div>
+    <div class="msg" id="msg"></div>
+    <div class="lbl">ฐานหลัก: FCF หลังหัก SBC ปรับภาษี</div>
+    <div class="barwrap"><div class="bar" id="barA"></div></div>
+    <div class="lbl">เทียบ: FCF หลังหัก SBC ตามงบ</div>
+    <div class="barwrap"><div class="bar" id="barR" style="opacity:.7"></div></div>
+    <div class="scale"><span>$0</span><span id="scaleMax"></span></div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card">
+    <table id="levels"></table>
+    <div class="msg" id="repStatus"></div>
+    <div class="warnbox" id="warns"></div>
+    <div class="note" id="scen"></div>
+    <div class="note" id="note"></div>
+  </div>
+</div>
+<script>
+// ตรรกะเดียวกับ src/alert.py: ราคาเก่า > 7 วัน, ไม่งั้น <= โซน 3 / โซน 2 / โซน 1 ตามลำดับ ไม่เข้าเลยคือ นอกโซน
+const REFRESH_MS = 60000, STALE_DAYS = 7;
+let zones = null;
+
+const fmt = n => '$' + n.toFixed(2);
+function status(p, marketTime, set) {
+  if (p == null || marketTime == null) return {t: 'ไม่มีราคา', c: 'var(--out)'};
+  const age = (Date.now() / 1000 - marketTime) / 86400;
+  if (age > STALE_DAYS) return {t: 'ราคาเก่า', c: 'var(--out)'};
+  if (p <= set.zone3_max) return {t: 'โซน 3', c: 'var(--z3)'};
+  if (p <= set.zone2_max) return {t: 'โซน 2', c: 'var(--z2)'};
+  if (p <= set.zone1_max) return {t: 'โซน 1', c: 'var(--z1)'};
+  return {t: 'นอกโซน', c: 'var(--out)'};
+}
+function scaleMax() {
+  const a = zones.zones.adjusted_fcf, r = zones.zones.reported_fcf;
+  return Math.ceil(Math.max(a.zone1_max, r.zone1_max) / 100) * 100;
+}
+function drawBar(id, s, p) {
+  const max = scaleMax(), w = v => (v / max * 100) + '%';
+  document.getElementById(id).innerHTML =
+    `<div style="width:${w(s.zone3_max)};background:var(--z3)"></div>` +
+    `<div style="width:${w(s.zone2_max - s.zone3_max)};background:var(--z2)"></div>` +
+    `<div style="width:${w(s.zone1_max - s.zone2_max)};background:var(--z1)"></div>` +
+    `<div style="width:${w(max - s.zone1_max)};background:var(--out)"></div>`;
+  const wrap = document.getElementById(id).parentElement;
+  wrap.querySelectorAll('.mark').forEach(m => m.remove());
+  if (p != null) {
+    const m = document.createElement('span');
+    m.className = 'mark'; m.style.left = Math.min(p / max * 100, 100) + '%';
+    wrap.appendChild(m);
+  }
+  document.getElementById('scaleMax').textContent = '$' + max;
+}
+function drawLevels() {
+  const a = zones.zones.adjusted_fcf, r = zones.zones.reported_fcf;
+  document.getElementById('levels').innerHTML =
+    `<tr><th></th><th>ฐานหลัก (ปรับภาษี ${a.fcf_musd.toLocaleString()}M)</th><th>เทียบ (ตามงบ ${r.fcf_musd.toLocaleString()}M)</th></tr>` +
+    `<tr><td>โซน 1 ราคา ≤</td><td>${fmt(a.zone1_max)}</td><td>${fmt(r.zone1_max)}</td></tr>` +
+    `<tr><td>โซน 2 ราคา ≤</td><td>${fmt(a.zone2_max)}</td><td>${fmt(r.zone2_max)}</td></tr>` +
+    `<tr><td>โซน 3 ราคา ≤</td><td>${fmt(a.zone3_max)}</td><td>${fmt(r.zone3_max)}</td></tr>`;
+  document.getElementById('warns').innerHTML = zones.warnings.map(w => `<p>⚠ ${w}</p>`).join('') +
+    `<p>${r.note}</p>`;
+  const s = zones.scenarios;
+  document.getElementById('scen').textContent =
+    `${s.note} · ดี ${s.good}x / ฐาน ${s.base}x / แย่ ${s.bad}x`;
+  document.getElementById('note').textContent =
+    `โซนอัปเดต ${zones.updated} · กติกา: ${zones.rule} · ที่มา: ${zones.source}`;
+}
+async function refresh() {
+  const err = document.getElementById('err');
+  try {
+    const r = await fetch('/api/price');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    const p = d.price, a = zones.zones.adjusted_fcf, rp = zones.zones.reported_fcf;
+    const st = status(p, d.market_time, a), sr = status(p, d.market_time, rp);
+    document.getElementById('price').textContent = fmt(p);
+    if (d.prev_close) {
+      const ch = (p / d.prev_close - 1) * 100;
+      const el = document.getElementById('chg');
+      el.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+    }
+    const zEl = document.getElementById('zone');
+    zEl.textContent = st.t; zEl.style.background = st.c;
+    document.getElementById('msg').textContent =
+      `สถานะตามฐานหลัก · ราคาเทียบ โซน 3 ${fmt(a.zone3_max)} / โซน 2 ${fmt(a.zone2_max)} / โซน 1 ${fmt(a.zone1_max)}`;
+    document.getElementById('repStatus').textContent = `ข้อมูลเทียบ (ฐานตามงบ): ${sr.t}`;
+    drawBar('barA', a, p); drawBar('barR', rp, p);
+    document.title = zones.ticker + ' ' + fmt(p) + ' · ' + st.t;
+    const t = d.market_time ? new Date(d.market_time * 1000).toLocaleString('th-TH') : '–';
+    err.textContent = '';
+    document.getElementById('note').textContent =
+      `ราคา ณ ${t} · ${d.source} · โซนอัปเดต ${zones.updated} · ${zones.price_note} · ที่มา: ${zones.source}`;
+  } catch (e) {
+    err.textContent = 'ดึงราคาไม่สำเร็จ: ' + e.message + ' (ลองใหม่อัตโนมัติทุก 1 นาที)';
+  }
+}
+(async () => {
+  zones = await (await fetch('/api/zones')).json();
+  document.getElementById('title').textContent = `${zones.name} (${zones.ticker}) — ติดตามราคาเทียบโซน`;
+  drawBar('barA', zones.zones.adjusted_fcf, null); drawBar('barR', zones.zones.reported_fcf, null); drawLevels();
+  refresh(); setInterval(refresh, REFRESH_MS);
+})();
+</script>
+</body>
+</html>
