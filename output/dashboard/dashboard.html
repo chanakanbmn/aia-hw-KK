@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watchlist Dashboard</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;
+--green:#1f9d55;--green-bg:#e3f6ea;--yellow:#b7791f;--yellow-bg:#fdf3dc;--red:#c53030;--red-bg:#fde8e8;--grey:#6b7280;--grey-bg:#eef0f3;--btn:#2b6cb0}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mut:#9aa3b2;--line:#2c3340;
+--green:#5fd38d;--green-bg:#183626;--yellow:#f2c46b;--yellow-bg:#3a2f15;--red:#f28b8b;--red-bg:#3d1c1c;--grey:#9aa3b2;--grey-bg:#262c37;--btn:#7fb2f0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--btn)}
+.legend span{display:inline-block;margin-right:10px;font-size:13px;color:var(--mut)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:8px 1.4fr 1fr 1.6fr 0.9fr auto;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 0;overflow:hidden}
+.stripe{align-self:stretch;width:8px}
+.tk{font-weight:700;font-size:17px}
+.nm,.small{color:var(--mut);font-size:12px}
+.px{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.zones{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.zones b{color:var(--ink);font-weight:600}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;font-size:14px;text-align:center;min-width:64px}
+.green .stripe{background:var(--green)} .green .pill{background:var(--green-bg);color:var(--green)}
+.yellow .stripe{background:var(--yellow)} .yellow .pill{background:var(--yellow-bg);color:var(--yellow)}
+.red .stripe{background:var(--red)} .red .pill{background:var(--red-bg);color:var(--red)}
+.grey .stripe{background:var(--grey)} .grey .pill{background:var(--grey-bg);color:var(--grey)}
+a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px solid var(--btn);border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap}
+.btn.off{color:var(--mut);border-color:var(--line);pointer-events:none}
+.foot{margin-top:18px;font-size:12px;color:var(--mut)}
+.err{color:var(--red);font-size:13px}
+@media (max-width:720px){.row{grid-template-columns:8px 1fr auto;row-gap:6px}.zones,.gap{grid-column:2 / 4}.act{grid-column:2 / 4}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Watchlist Dashboard</h1>
+  <div class="sub" id="sub">กำลังโหลด…</div>
+  <div class="bar">
+    <button id="refresh">รีเฟรช</button>
+    <button id="notify">เปิดการแจ้งเตือน</button>
+    <span class="legend">
+      <span><i class="dot" style="background:var(--green)"></i>ซื้อ = โซน 3</span>
+      <span><i class="dot" style="background:var(--yellow)"></i>สนใจ = โซน 2</span>
+      <span><i class="dot" style="background:var(--red)"></i>รอ = โซน 1 / นอกโซน</span>
+      <span><i class="dot" style="background:var(--grey)"></i>ไม่มีราคา / ราคาเก่า / ไม่มีโซน</span>
+    </span>
+  </div>
+  <div class="list" id="list"></div>
+  <p class="foot">ป้ายมาจากกฎโซนของผู้ใช้ (ราคาที่ทำให้มัลติเพิลเท่าระดับล่างของช่วงในอดีตของหุ้นตัวเอง) ไม่ได้รวมคุณภาพธุรกิจหรือข่าว อ่าน infographic ประกอบเสมอ
+  ราคาจาก Yahoo Finance แบบไม่เป็นทางการ [ยังไม่ยืนยัน] อาจล่าช้า · รีเฟรชอัตโนมัติทุก 5 นาที · เตือนเมื่อป้ายเปลี่ยนขณะเปิดหน้านี้ไว้ · ไม่ใช่คำแนะนำลงทุน</p>
+</main>
+<script>
+const REFRESH_MS = 5 * 60 * 1000;
+const fmt = (v, d = 2) => v == null ? "-" : Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function loadPrev() { try { return JSON.parse(localStorage.getItem("labels") || "{}"); } catch { return {}; } }
+function savePrev(m) { try { localStorage.setItem("labels", JSON.stringify(m)); } catch {} }
+
+function alertChanges(rows) {
+  const prev = loadPrev(), now = {};
+  for (const r of rows) {
+    now[r.ticker] = r.label;
+    const before = prev[r.ticker];
+    // เตือนเฉพาะเมื่อเคยมีป้ายมาก่อนและเปลี่ยน ไม่เตือนครั้งแรก และไม่เตือนเมื่อราคาดึงไม่ได้
+    if (before !== undefined && r.label && before !== r.label && "Notification" in window && Notification.permission === "granted") {
+      new Notification(`${r.ticker}: ${before || "-"} → ${r.label}`, {body: `ราคา ${fmt(r.price)} (${r.status}) ราคาไม่เป็นทางการ`});
+    }
+    if (!r.label && before) now[r.ticker] = before;  // ราคาหายชั่วคราว คงป้ายเดิมไว้
+  }
+  savePrev(now);
+}
+
+function render(data) {
+  document.getElementById("sub").textContent = `อัปเดต ${data.fetched} · ${data.rows.length} ตัว`;
+  document.getElementById("list").innerHTML = data.rows.map(r => {
+    const z = r.zones;
+    const zones = z ? `โซน 3 ≤ <b>${fmt(z.zone3_max)}</b> · โซน 2 ≤ <b>${fmt(z.zone2_max)}</b> · โซน 1 ≤ <b>${fmt(z.zone1_max)}</b>` : "ไม่มีโซน";
+    const gap = r.gap_pct == null ? "" : `ห่างจากโซนถัดไป ${(r.gap_pct * 100).toFixed(1)}%`;
+    const btn = r.has_infographic
+      ? `<a class="btn" href="/infographic/${encodeURIComponent(r.ticker)}" target="_blank" rel="noopener">ดู infographic</a>`
+      : `<span class="btn off">ยังไม่มี infographic</span>`;
+    return `<div class="row ${esc(r.color)}">
+      <div class="stripe"></div>
+      <div><div class="tk">${esc(r.ticker)}</div><div class="nm">${esc(r.name)}</div></div>
+      <div><div class="px">${fmt(r.price)}</div><div class="small">${esc(r.price_date || "ดึงราคาไม่ได้")}</div></div>
+      <div class="zones">${zones}<div class="small">${esc(r.note)}</div></div>
+      <div class="gap"><span class="pill">${esc(r.label || r.status)}</span><div class="small">${esc(gap)}</div></div>
+      <div class="act">${btn}</div>
+    </div>`;
+  }).join("");
+}
+
+async function load() {
+  try {
+    const res = await fetch("/api/rows", {cache: "no-store"});
+    const data = await res.json();
+    render(data);
+    alertChanges(data.rows);
+  } catch (e) {
+    document.getElementById("sub").innerHTML = '<span class="err">โหลดข้อมูลไม่ได้ ตรวจว่าเซิร์ฟเวอร์ยังรันอยู่</span>';
+  }
+}
+
+document.getElementById("refresh").onclick = load;
+document.getElementById("notify").onclick = async () => {
+  if (!("Notification" in window)) return alert("เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน");
+  const p = await Notification.requestPermission();
+  document.getElementById("notify").textContent = p === "granted" ? "แจ้งเตือนเปิดอยู่" : "ไม่ได้รับอนุญาตแจ้งเตือน";
+};
+if ("Notification" in window && Notification.permission === "granted") document.getElementById("notify").textContent = "แจ้งเตือนเปิดอยู่";
+load();
+setInterval(load, REFRESH_MS);
+</script>
+</body>
+</html>

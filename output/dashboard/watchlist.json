@@ -1,0 +1,12 @@
+{
+  "note": "รายการหุ้นที่สนใจ แก้เพิ่ม/ลบได้ ใช้ zones_file (ไฟล์โซนของหุ้นตัวนั้น) หรือใส่ zone3_max/zone2_max/zone1_max ตรง ๆ path นับจากโฟลเดอร์นี้",
+  "stocks": [
+    {"ticker": "NOW", "name": "ServiceNow", "zones_file": "../NOW/ticker/zones.json", "infographic": "../NOW/NOW-infographic.html"},
+    {"ticker": "INTU", "name": "Intuit", "zones_file": "../INTU/ticker/zones.json", "infographic": "../INTU/INTU-infographic.html", "note": "ใช้โซนฐาน FCF ปรับภาษี"},
+    {"ticker": "BX", "name": "Blackstone", "zones_file": "../BX/ticker/zones.json", "infographic": "../BX/BX-infographic.html", "note": "โซนจาก margin of safety ใน BX.md"},
+    {"ticker": "NTNX", "name": "Nutanix", "zone3_max": 51.07, "zone2_max": 57.85, "zone1_max": 64.93, "note": "โซนจาก output/data.csv (EV/FCF)"},
+    {"ticker": "S", "name": "SentinelOne", "zone3_max": 17.33, "zone2_max": 20.92, "zone1_max": 23.76, "note": "โซนจาก output/data.csv (EV/Sales เพราะ FCF ติดลบ)"},
+    {"ticker": "KVYO", "name": "Klaviyo", "zone3_max": 17.58, "zone2_max": 20.05, "zone1_max": 20.25, "note": "โซนจาก output/data.csv (EV/Sales) ประวัติราคาสั้น"},
+    {"ticker": "ZETA", "name": "Zeta Global", "zone3_max": 17.46, "zone2_max": 19.68, "zone1_max": 19.97, "note": "โซนจาก output/data.csv (EV/Sales)"}
+  ]
+}
