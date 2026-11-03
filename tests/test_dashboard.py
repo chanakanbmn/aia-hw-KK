@@ -79,3 +79,33 @@ def test_resolve_path_only_allows_known_routes(tmp_path):
     assert resolve_path("/infographic/XYZ", watch, tmp_path) is None
     assert resolve_path("/../../data/raw/NOW.json", watch, tmp_path) is None
     assert resolve_path("/infographic/..%2F..%2Fsecret", watch, tmp_path) is None
+
+
+from src.dashboard import zone_key_for  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "st,key",
+    [("โซน 3", "z3"), ("โซน 2", "z2"), ("โซน 1", "z1"), ("นอกโซน", "out"),
+     ("ไม่มีราคา", "none"), ("ราคาเก่า", "none"), ("ไม่มีโซน", "none")],
+)
+def test_zone_key_for_each_status(st, key):
+    assert zone_key_for(st) == key
+
+
+def test_make_row_has_zone_key_and_spark_passthrough():
+    r = make_row({"ticker": "AAA"}, Z, 110.0, "2026-11-02", TODAY, spark=[1.0, 2.0, 3.0])
+    assert r["zone_key"] == "z2"
+    assert r["spark"] == [1.0, 2.0, 3.0]
+
+
+def test_make_row_spark_defaults_to_empty_list():
+    assert make_row({"ticker": "AAA"}, Z, 110.0, "2026-11-02", TODAY)["spark"] == []
+
+
+def test_spark_change_pct():
+    from src.dashboard import spark_change
+
+    assert spark_change([100.0, 110.0]) == pytest.approx(0.10)
+    assert spark_change([100.0]) is None
+    assert spark_change([]) is None

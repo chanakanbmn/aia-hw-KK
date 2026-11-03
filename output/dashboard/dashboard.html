@@ -5,13 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Watchlist Dashboard</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;
---green:#1f9d55;--green-bg:#e3f6ea;--yellow:#b7791f;--yellow-bg:#fdf3dc;--red:#c53030;--red-bg:#fde8e8;--grey:#6b7280;--grey-bg:#eef0f3;--btn:#2b6cb0}
-@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mut:#9aa3b2;--line:#2c3340;
---green:#5fd38d;--green-bg:#183626;--yellow:#f2c46b;--yellow-bg:#3a2f15;--red:#f28b8b;--red-bg:#3d1c1c;--grey:#9aa3b2;--grey-bg:#262c37;--btn:#7fb2f0}}
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;--btn:#2b6cb0;
+--z3:#2fb36a;--z2:#e3b34a;--z1:#e08a45;--out:#e0625a;--none:#8b93a1;
+--z3-bg:#e3f6ea;--z2-bg:#fdf3dc;--z1-bg:#fdeadb;--out-bg:#fde8e8;--none-bg:#eef0f3;
+--z3-ink:#157a42;--z2-ink:#8a5a0b;--z1-ink:#a4531a;--out-ink:#b02a23;--none-ink:#5a6270;--bar-ink:#14110b;--up:#1f9d55;--down:#c53030}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mut:#9aa3b2;--line:#2c3340;--btn:#7fb2f0;
+--z3:#6fcf9a;--z2:#e8c06a;--z1:#e09a5c;--out:#ee7b72;--none:#6b7482;
+--z3-bg:#16301f;--z2-bg:#332a14;--z1-bg:#362316;--out-bg:#3a1d1d;--none-bg:#222833;
+--z3-ink:#7be0a8;--z2-ink:#f2c46b;--z1-ink:#f0a868;--out-ink:#f28b8b;--none-ink:#9aa3b2;--bar-ink:#14110b;--up:#5fd38d;--down:#f28b8b}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
-main{max-width:1000px;margin:0 auto;padding:20px 16px 40px}
+main{max-width:1040px;margin:0 auto;padding:20px 16px 40px}
 h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--mut);font-size:13px;margin-bottom:14px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
@@ -19,24 +23,32 @@ button{font:inherit;border:1px solid var(--line);background:var(--card);color:va
 button:hover{border-color:var(--btn)}
 .legend span{display:inline-block;margin-right:10px;font-size:13px;color:var(--mut)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.list{display:flex;flex-direction:column;gap:10px}
-.row{display:grid;grid-template-columns:8px 1.4fr 1fr 1.6fr 0.9fr auto;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 0;overflow:hidden}
-.stripe{align-self:stretch;width:8px}
+.list{display:flex;flex-direction:column;gap:12px}
+.row{border:1px solid var(--line);border-left:6px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--bg-c);
+display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(190px,1.5fr) minmax(130px,1fr) auto;gap:6px 16px;align-items:center}
+.z3{--c:var(--z3);--bg-c:var(--z3-bg);--ink-c:var(--z3-ink)}
+.z2{--c:var(--z2);--bg-c:var(--z2-bg);--ink-c:var(--z2-ink)}
+.z1{--c:var(--z1);--bg-c:var(--z1-bg);--ink-c:var(--z1-ink)}
+.out{--c:var(--out);--bg-c:var(--out-bg);--ink-c:var(--out-ink)}
+.none{--c:var(--none);--bg-c:var(--none-bg);--ink-c:var(--none-ink)}
 .tk{font-weight:700;font-size:17px}
 .nm,.small{color:var(--mut);font-size:12px}
-.px{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
-.zones{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
-.zones b{color:var(--ink);font-weight:600}
-.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;font-size:14px;text-align:center;min-width:64px}
-.green .stripe{background:var(--green)} .green .pill{background:var(--green-bg);color:var(--green)}
-.yellow .stripe{background:var(--yellow)} .yellow .pill{background:var(--yellow-bg);color:var(--yellow)}
-.red .stripe{background:var(--red)} .red .pill{background:var(--red-bg);color:var(--red)}
-.grey .stripe{background:var(--grey)} .grey .pill{background:var(--grey-bg);color:var(--grey)}
-a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px solid var(--btn);border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap}
+.px{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.pxrow{display:flex;align-items:center;gap:10px}
+.spark{display:block}
+.chg.up{color:var(--up)} .chg.down{color:var(--down)}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;font-size:14px;text-align:center;min-width:64px;background:var(--c);color:var(--bar-ink)}
+a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px solid var(--btn);border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap;background:var(--card)}
 .btn.off{color:var(--mut);border-color:var(--line);pointer-events:none}
+.zonebar{grid-column:1 / -1;margin-top:4px}
+.zb{display:flex;height:26px;border-radius:8px;overflow:hidden;background:var(--out)}
+.zb span{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bar-ink);white-space:nowrap;overflow:hidden}
+.zb .s3{background:var(--z3)} .zb .s2{background:var(--z2)} .zb .s1{background:var(--z1)} .zb .so{background:var(--out)}
+.mk{position:relative;height:18px;margin-top:2px}
+.mk i{position:absolute;top:0;transform:translateX(-50%);font-style:normal;font-size:12px;font-weight:700;color:var(--ink-c);white-space:nowrap}
 .foot{margin-top:18px;font-size:12px;color:var(--mut)}
-.err{color:var(--red);font-size:13px}
-@media (max-width:720px){.row{grid-template-columns:8px 1fr auto;row-gap:6px}.zones,.gap{grid-column:2 / 4}.act{grid-column:2 / 4}}
+.err{color:var(--out-ink);font-size:13px}
+@media (max-width:760px){.row{grid-template-columns:1fr 1fr}.px{font-size:18px}}
 </style>
 </head>
 <body>
@@ -47,10 +59,11 @@ a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px soli
     <button id="refresh">รีเฟรช</button>
     <button id="notify">เปิดการแจ้งเตือน</button>
     <span class="legend">
-      <span><i class="dot" style="background:var(--green)"></i>ซื้อ = โซน 3</span>
-      <span><i class="dot" style="background:var(--yellow)"></i>สนใจ = โซน 2</span>
-      <span><i class="dot" style="background:var(--red)"></i>รอ = โซน 1 / นอกโซน</span>
-      <span><i class="dot" style="background:var(--grey)"></i>ไม่มีราคา / ราคาเก่า / ไม่มีโซน</span>
+      <span><i class="dot" style="background:var(--z3)"></i>โซน 3 = ซื้อ</span>
+      <span><i class="dot" style="background:var(--z2)"></i>โซน 2 = สนใจ</span>
+      <span><i class="dot" style="background:var(--z1)"></i>โซน 1 = รอ</span>
+      <span><i class="dot" style="background:var(--out)"></i>นอกโซน = รอ</span>
+      <span><i class="dot" style="background:var(--none)"></i>ไม่มีราคา / ราคาเก่า / ไม่มีโซน</span>
     </span>
   </div>
   <div class="list" id="list"></div>
@@ -79,22 +92,44 @@ function alertChanges(rows) {
   savePrev(now);
 }
 
+function spark(closes, up) {
+  if (!closes || closes.length < 2) return '<span class="small">ไม่มีกราฟ</span>';
+  const W = 96, H = 30, P = 2, lo = Math.min(...closes), hi = Math.max(...closes), span = (hi - lo) || 1;
+  const pts = closes.map((c, i) => [P + i * (W - 2 * P) / (closes.length - 1), H - P - (c - lo) * (H - 2 * P) / span]);
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const last = pts[pts.length - 1], col = up ? "var(--up)" : "var(--down)";
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="แนวโน้มราคา 3 เดือน"><path d="${d}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4" fill="${col}"/></svg>`;
+}
+
+function zoneBar(r) {
+  const z = r.zones;
+  if (!z) return "";
+  const max = z.zone1_max * 1.2, pct = v => Math.max(0, Math.min(100, v / max * 100));
+  const w3 = pct(z.zone3_max), w2 = pct(z.zone2_max) - w3, w1 = pct(z.zone1_max) - pct(z.zone2_max), wo = 100 - pct(z.zone1_max);
+  // ป้ายเต็มเมื่อกว้างพอ ป้ายสั้น (เฉพาะราคา) เมื่อแคบ ซ่อนเมื่อแคบมาก
+  const seg = (cls, w, txt, short) => w > 0.01 ? `<span class="${cls}" style="width:${w}%" title="${txt}">${w >= 11 ? txt : (w >= 5.5 ? short : "")}</span>` : "";
+  const pos = r.price == null ? null : pct(r.price);
+  const tag = r.price == null ? "" : `$${fmt(r.price)} [ยังไม่ยืนยัน] = ${esc(r.status)}`;
+  const left = pos == null ? 0 : Math.min(Math.max(pos, 14), 86);
+  return `<div class="zonebar"><div class="zb">${seg("s3", w3, `โซน 3 ≤ $${fmt(z.zone3_max, 1)}`, `≤ $${fmt(z.zone3_max, 1)}`)}${seg("s2", w2, `โซน 2 ≤ $${fmt(z.zone2_max, 1)}`, `≤ $${fmt(z.zone2_max, 1)}`)}${seg("s1", w1, `โซน 1 ≤ $${fmt(z.zone1_max, 1)}`, `≤ $${fmt(z.zone1_max, 1)}`)}${seg("so", wo, "", "")}</div>
+    <div class="mk">${pos == null ? "" : `<i style="left:${left}%">▲ ${tag}</i>`}</div></div>`;
+}
+
 function render(data) {
   document.getElementById("sub").textContent = `อัปเดต ${data.fetched} · ${data.rows.length} ตัว`;
   document.getElementById("list").innerHTML = data.rows.map(r => {
-    const z = r.zones;
-    const zones = z ? `โซน 3 ≤ <b>${fmt(z.zone3_max)}</b> · โซน 2 ≤ <b>${fmt(z.zone2_max)}</b> · โซน 1 ≤ <b>${fmt(z.zone1_max)}</b>` : "ไม่มีโซน";
     const gap = r.gap_pct == null ? "" : `ห่างจากโซนถัดไป ${(r.gap_pct * 100).toFixed(1)}%`;
+    const ch = r.spark_change, up = ch == null || ch >= 0;
+    const chg = ch == null ? "" : `<span class="chg ${up ? "up" : "down"}">3 เดือน ${(ch * 100).toFixed(1)}%</span>`;
     const btn = r.has_infographic
       ? `<a class="btn" href="/infographic/${encodeURIComponent(r.ticker)}" target="_blank" rel="noopener">ดู infographic</a>`
       : `<span class="btn off">ยังไม่มี infographic</span>`;
-    return `<div class="row ${esc(r.color)}">
-      <div class="stripe"></div>
-      <div><div class="tk">${esc(r.ticker)}</div><div class="nm">${esc(r.name)}</div></div>
-      <div><div class="px">${fmt(r.price)}</div><div class="small">${esc(r.price_date || "ดึงราคาไม่ได้")}</div></div>
-      <div class="zones">${zones}<div class="small">${esc(r.note)}</div></div>
-      <div class="gap"><span class="pill">${esc(r.label || r.status)}</span><div class="small">${esc(gap)}</div></div>
-      <div class="act">${btn}</div>
+    return `<div class="row ${esc(r.zone_key)}">
+      <div><div class="tk">${esc(r.ticker)}</div><div class="nm">${esc(r.name)}</div><div class="small">${esc(r.note)}</div></div>
+      <div><div class="pxrow"><div class="px">${fmt(r.price)}</div>${spark(r.spark, up)}</div><div class="small">${esc(r.price_date || "ดึงราคาไม่ได้")} ${chg}</div></div>
+      <div><span class="pill">${esc(r.label || r.status)}</span><div class="small">${esc(gap)}</div></div>
+      <div>${btn}</div>
+      ${zoneBar(r)}
     </div>`;
   }).join("");
 }

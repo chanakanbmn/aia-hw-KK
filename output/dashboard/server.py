@@ -25,12 +25,14 @@ def load_watch() -> list[dict]:
 
 
 def fetch_price(ticker: str):
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=3mo"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=10) as resp:
-        meta = json.load(resp)["chart"]["result"][0]["meta"]
+        result = json.load(resp)["chart"]["result"][0]
+    meta = result["meta"]
     day = datetime.fromtimestamp(meta["regularMarketTime"], timezone.utc).date().isoformat()
-    return float(meta["regularMarketPrice"]), day
+    closes = [round(c, 2) for c in result["indicators"]["quote"][0]["close"] if c is not None]  # ราคาปิดรายวัน 3 เดือน
+    return float(meta["regularMarketPrice"]), day, closes
 
 
 def get_rows() -> list[dict]:
@@ -39,10 +41,10 @@ def get_rows() -> list[dict]:
     rows = []
     for e in load_watch():
         try:
-            price, day = fetch_price(e["ticker"])
+            price, day, closes = fetch_price(e["ticker"])
         except Exception:
-            price, day = None, None  # ดึงไม่ได้ = สีเทา ไม่เดา
-        rows.append(make_row(e, normalize_zones(e, HERE), price, day, date.today().isoformat()))
+            price, day, closes = None, None, []  # ดึงไม่ได้ = สีเทา ไม่เดา
+        rows.append(make_row(e, normalize_zones(e, HERE), price, day, date.today().isoformat(), spark=closes))
     _cache.update(at=time.time(), rows=sort_rows(rows))
     return _cache["rows"]
 

@@ -15,6 +15,20 @@ ORDER = {"ซื้อ": 0, "สนใจ": 1, "รอ": 2, None: 3}
 KEYS = ("zone3_max", "zone2_max", "zone1_max")
 
 
+ZONE_KEYS = {"โซน 3": "z3", "โซน 2": "z2", "โซน 1": "z1", "นอกโซน": "out"}
+
+
+def zone_key_for(st: str) -> str:
+    """คีย์สีพื้นหลัง: z3 เขียว, z2 เหลือง, z1 ส้ม, out แดง, none เทา"""
+    return ZONE_KEYS.get(st, "none")
+
+
+def spark_change(closes: list[float]) -> float | None:
+    if len(closes) < 2 or not closes[0]:
+        return None
+    return closes[-1] / closes[0] - 1
+
+
 def label_for(st: str) -> tuple[str | None, str]:
     return LABELS.get(st, (None, "grey"))
 
@@ -37,7 +51,8 @@ def normalize_zones(entry: dict, base_dir: Path) -> dict | None:
     return None
 
 
-def make_row(entry: dict, zones: dict | None, price: float | None, price_date: str | None, today: str) -> dict:
+def make_row(entry: dict, zones: dict | None, price: float | None, price_date: str | None, today: str,
+             spark: list[float] | None = None) -> dict:
     levels = {f"level{k[4]}": v for k, v in zones.items()} if zones else None  # src/alert.py ใช้ชื่อ level1-3
     st = status(price, price_date, levels, today)
     label, color = label_for(st)
@@ -53,6 +68,9 @@ def make_row(entry: dict, zones: dict | None, price: float | None, price_date: s
         "status": st,
         "label": label,
         "color": color,
+        "zone_key": zone_key_for(st),
+        "spark": spark or [],
+        "spark_change": spark_change(spark or []),
         "gap_pct": gap,
         "has_infographic": bool(entry.get("infographic")),
         "note": entry.get("note", ""),
