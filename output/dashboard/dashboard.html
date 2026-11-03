@@ -44,8 +44,9 @@ a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px soli
 .zb{display:flex;height:26px;border-radius:8px;overflow:hidden;background:var(--out)}
 .zb span{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bar-ink);white-space:nowrap;overflow:hidden}
 .zb .s3{background:var(--z3)} .zb .s2{background:var(--z2)} .zb .s1{background:var(--z1)} .zb .so{background:var(--out)}
-.mk{position:relative;height:18px;margin-top:2px}
-.mk i{position:absolute;top:0;transform:translateX(-50%);font-style:normal;font-size:12px;font-weight:700;color:var(--ink-c);white-space:nowrap}
+.mk{position:relative;height:38px;margin-top:1px}
+.mk b{position:absolute;top:0;transform:translateX(-50%);font-size:13px;line-height:15px;color:var(--ink-c)}
+.mk i{position:absolute;top:17px;transform:translateX(-50%);font-style:normal;font-size:12px;font-weight:700;color:var(--ink-c);white-space:nowrap}
 .foot{margin-top:18px;font-size:12px;color:var(--mut)}
 .err{color:var(--out-ink);font-size:13px}
 @media (max-width:760px){.row{grid-template-columns:1fr 1fr}.px{font-size:18px}}
@@ -104,7 +105,7 @@ function spark(closes, up) {
 function zoneBar(r) {
   const z = r.zones;
   if (!z) return "";
-  const max = z.zone1_max * 1.2, pct = v => Math.max(0, Math.min(100, v / max * 100));
+  const max = Math.max(z.zone1_max * 1.2, (r.price || 0) * 1.08), pct = v => Math.max(0, Math.min(100, v / max * 100));
   const w3 = pct(z.zone3_max), w2 = pct(z.zone2_max) - w3, w1 = pct(z.zone1_max) - pct(z.zone2_max), wo = 100 - pct(z.zone1_max);
   // ป้ายเต็มเมื่อกว้างพอ ป้ายสั้น (เฉพาะราคา) เมื่อแคบ ซ่อนเมื่อแคบมาก
   const seg = (cls, w, txt, short) => w > 0.01 ? `<span class="${cls}" style="width:${w}%" title="${txt}">${w >= 11 ? txt : (w >= 5.5 ? short : "")}</span>` : "";
@@ -112,7 +113,7 @@ function zoneBar(r) {
   const tag = r.price == null ? "" : `$${fmt(r.price)} [ยังไม่ยืนยัน] = ${esc(r.status)}`;
   const left = pos == null ? 0 : Math.min(Math.max(pos, 14), 86);
   return `<div class="zonebar"><div class="zb">${seg("s3", w3, `โซน 3 ≤ $${fmt(z.zone3_max, 1)}`, `≤ $${fmt(z.zone3_max, 1)}`)}${seg("s2", w2, `โซน 2 ≤ $${fmt(z.zone2_max, 1)}`, `≤ $${fmt(z.zone2_max, 1)}`)}${seg("s1", w1, `โซน 1 ≤ $${fmt(z.zone1_max, 1)}`, `≤ $${fmt(z.zone1_max, 1)}`)}${seg("so", wo, "", "")}</div>
-    <div class="mk">${pos == null ? "" : `<i style="left:${left}%">▲ ${tag}</i>`}</div></div>`;
+    <div class="mk">${pos == null ? "" : `<b class="ar" style="left:${pos}%">▲</b><i style="left:${left}%">${tag}</i>`}</div></div>`;
 }
 
 function render(data) {
