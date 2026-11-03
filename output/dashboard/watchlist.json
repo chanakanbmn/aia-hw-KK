@@ -38,10 +38,10 @@
       "ticker": "KVYO",
       "name": "Klaviyo",
       "sector": "ซอฟต์แวร์ / ไซเบอร์",
-      "zone3_max": 17.58,
-      "zone2_max": 20.05,
-      "zone1_max": 20.25,
-      "note": "โซนจาก output/data.csv (EV/Sales) ประวัติราคาสั้น"
+      "zone3_max": 15.51,
+      "zone2_max": 19.7,
+      "zone1_max": 24.4,
+      "note": "โซนจาก output/data.csv (EV/Sales) แก้ราคาย้อนหลังแล้ว ประวัติราคาสั้น"
     },
     {
       "ticker": "ZETA",
@@ -51,6 +51,14 @@
       "zone2_max": 19.68,
       "zone1_max": 19.97,
       "note": "โซนจาก output/data.csv (EV/Sales)"
+    },
+    {
+      "ticker": "LRCX",
+      "name": "Lam Research",
+      "sector": "เซมิคอนดักเตอร์ (อุปกรณ์ผลิตชิป)",
+      "note": "โซนจาก LRCX/ticker/zones.json (EV/FCF) ธุรกิจวัฏจักร FCF โตเร็ว โซนจึงต่ำมาก",
+      "zones_file": "../LRCX/ticker/zones.json",
+      "infographic": "../LRCX/LRCX-infographic.html"
     },
     {
       "ticker": "BX",

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LRCX Price Ticker</title>
+<style>
+:root{--bg:#0b0a08;--card:#16130d;--line:#3a2f17;--gold:#e8c26a;--text:#f1ead8;--mute:#a89c80;--z3:#6fcf97;--z2:#e8c26a;--z1:#e29a5a;--out:#eb7a6a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Noto Sans Thai",system-ui,sans-serif;display:flex;justify-content:center}
+.wrap{width:100%;max-width:560px;padding:20px 16px 40px}
+h1{margin:0;font-size:20px;color:var(--gold)}
+.sub{color:var(--mute);font-size:12px;margin:2px 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:12px}
+.price{font-size:48px;font-weight:700;line-height:1}
+.chg{font-size:14px;margin-left:8px}
+.zone{margin-top:14px;padding:12px;border-radius:10px;font-weight:700;font-size:18px;color:#000;text-align:center}
+.msg{margin-top:10px;font-size:14px}
+.bar{position:relative;height:14px;border-radius:7px;overflow:hidden;display:flex;margin-top:18px}
+.bar div{height:100%}
+.mark{position:absolute;top:-4px;width:3px;height:22px;background:#fff;border-radius:2px;transform:translateX(-1px)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+td{padding:5px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.note{color:var(--mute);font-size:11px;margin-top:10px}
+.err{color:var(--out);font-size:13px;margin-top:10px}
+button{background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">LRCX</h1>
+  <div class="sub">เทียบราคากับโซนจาก LRCX.md (สถานะ draft) · ไม่ใช่คำแนะนำลงทุน ไม่ได้บอกให้ซื้อหรือขาย</div>
+
+  <div class="card">
+    <div><span class="price" id="price">–</span><span class="chg" id="chg"></span></div>
+    <div class="zone" id="zone">กำลังโหลด…</div>
+    <div class="msg" id="msg"></div>
+    <div class="bar" id="bar"></div>
+    <div class="scale"><span>$0</span><span id="scaleMax"></span></div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card">
+    <table id="levels"></table>
+    <div class="note" id="note"></div>
+    <div class="note">ราคาเป็นแหล่งรอง (Yahoo ไม่เป็นทางการ) [ยังไม่ยืนยัน] · โซนบอกตำแหน่งของราคาเทียบช่วง EV/FCF หลังหัก SBC ในอดีตของหุ้นตัวเองเท่านั้น ไม่ได้บอกว่าแพงหรือถูกในแง่สัมบูรณ์ (อดีตเป็นช่วงวัฏจักรที่ FCF ต่ำกว่า) · ไม่ใช่คำแนะนำลงทุน</div>
+  </div>
+</div>
+<script>
+const REFRESH_MS = 60000, STALE_DAYS = 7;
+let zones = null;
+
+const fmt = n => '$' + n.toFixed(2);
+// ตรรกะเดียวกับ src/alert.py: ราคาเก่าเกิน 7 วัน -> ราคาเก่า; <= zone3 -> โซน 3; <= zone2 -> โซน 2; <= zone1 -> โซน 1; ไม่งั้น นอกโซน
+function zoneOf(p, z, ageDays) {
+  if (p == null) return {k: 'none', t: 'ไม่มีราคา', c: 'var(--mute)'};
+  if (ageDays != null && ageDays > STALE_DAYS) return {k: 'stale', t: 'ราคาเก่า', c: 'var(--mute)'};
+  const zz = z.zones;
+  if (p <= zz.zone3_max) return {k: 'z3', t: 'โซน 3', c: 'var(--z3)'};
+  if (p <= zz.zone2_max) return {k: 'z2', t: 'โซน 2', c: 'var(--z2)'};
+  if (p <= zz.zone1_max) return {k: 'z1', t: 'โซน 1', c: 'var(--z1)'};
+  return {k: 'out', t: 'นอกโซน', c: 'var(--out)'};
+}
+function drawBar(z, p) {
+  const zz = z.zones, max = Math.ceil(Math.max(zz.zone1_max, p || 0) * 1.05 / 10) * 10;
+  const w = v => (v / max * 100) + '%';
+  document.getElementById('bar').innerHTML =
+    `<div style="width:${w(zz.zone3_max)};background:var(--z3)"></div>` +
+    `<div style="width:${w(zz.zone2_max - zz.zone3_max)};background:var(--z2)"></div>` +
+    `<div style="width:${w(zz.zone1_max - zz.zone2_max)};background:var(--z1)"></div>` +
+    `<div style="width:${w(max - zz.zone1_max)};background:var(--out)"></div>` +
+    (p == null ? '' : `<span class="mark" style="left:${Math.min(p / max * 100, 100)}%"></span>`);
+  document.getElementById('scaleMax').textContent = '$' + max;
+}
+function drawLevels(z) {
+  const zz = z.zones, s = z.scenarios;
+  document.getElementById('levels').innerHTML =
+    `<tr><td>โซน 3 เมื่อราคา ≤</td><td>${fmt(zz.zone3_max)}</td></tr>` +
+    `<tr><td>โซน 2 เมื่อราคา ≤</td><td>${fmt(zz.zone2_max)}</td></tr>` +
+    `<tr><td>โซน 1 เมื่อราคา ≤</td><td>${fmt(zz.zone1_max)}</td></tr>` +
+    `<tr><td>ฉากแย่ / ฐาน / ดี (ต่อหุ้น ก่อนหัก SBC)</td><td>${fmt(s.bad)} / ${fmt(s.base)} / ${fmt(s.good)}</td></tr>`;
+  document.getElementById('note').textContent =
+    `${s.note} · โซนอัปเดต ${z.updated} · ที่มา: ${z.source}`;
+}
+async function refresh() {
+  const err = document.getElementById('err');
+  try {
+    const r = await fetch('/api/price');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    const z = zones, p = d.price;
+    const ageDays = d.market_time ? (Date.now() / 1000 - d.market_time) / 86400 : null;
+    const zn = zoneOf(p, z, ageDays);
+    document.getElementById('price').textContent = fmt(p);
+    if (d.prev_close) {
+      const ch = (p / d.prev_close - 1) * 100;
+      const el = document.getElementById('chg');
+      el.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+      el.style.color = ch >= 0 ? 'var(--z3)' : 'var(--out)';
+    }
+    const zEl = document.getElementById('zone');
+    zEl.textContent = 'สถานะ: ' + zn.t; zEl.style.background = zn.c;
+    const zz = z.zones;
+    let msg = '';
+    if (zn.k === 'z3') msg = `ราคาต่ำกว่าขอบโซน 3 (${fmt(zz.zone3_max)}) อยู่ ${((1 - p / zz.zone3_max) * 100).toFixed(1)}%`;
+    else if (zn.k === 'stale') msg = 'ข้อมูลราคาเก่ากว่า 7 วัน ไม่ใช้ตัดสินสถานะ';
+    else if (zn.k === 'out') msg = `ราคาสูงกว่าขอบโซน 1 (${fmt(zz.zone1_max)}) อยู่ ${((p / zz.zone1_max - 1) * 100).toFixed(1)}%`;
+    else msg = `ถ้าราคาลดลง ${((1 - zz.zone3_max / p) * 100).toFixed(1)}% จะถึงขอบโซน 3 (${fmt(zz.zone3_max)})`;
+    document.getElementById('msg').textContent = msg;
+    drawBar(z, p);
+    document.title = z.ticker + ' ' + fmt(p) + ' · ' + zn.t;
+    const t = d.market_time ? new Date(d.market_time * 1000).toLocaleString('th-TH') : '–';
+    err.textContent = '';
+    document.getElementById('note').textContent =
+      `ราคา ณ ${t} · ${d.source} · โซนอัปเดต ${z.updated} · ที่มา: ${z.source}`;
+  } catch (e) {
+    err.textContent = 'ดึงราคาไม่สำเร็จ: ' + e.message + ' (ลองใหม่อัตโนมัติทุก 1 นาที)';
+  }
+}
+(async () => {
+  zones = await (await fetch('/api/zones')).json();
+  document.getElementById('title').textContent = `${zones.name} (${zones.ticker}) — ราคาเทียบโซน`;
+  drawBar(zones, null); drawLevels(zones);
+  refresh(); setInterval(refresh, REFRESH_MS);
+})();
+</script>
+</body>
+</html>
