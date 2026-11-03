@@ -72,6 +72,7 @@ def make_row(entry: dict, zones: dict | None, price: float | None, price_date: s
         "spark": spark or [],
         "spark_change": spark_change(spark or []),
         "gap_pct": gap,
+        "sector": entry.get("sector", "อื่น ๆ"),
         "has_infographic": bool(entry.get("infographic")),
         "note": entry.get("note", ""),
     }
@@ -79,6 +80,26 @@ def make_row(entry: dict, zones: dict | None, price: float | None, price_date: s
 
 def sort_rows(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: ORDER.get(r["label"], 3))
+
+
+def group_rows(rows: list[dict]) -> list[dict]:
+    """จัดเป็นกลุ่มตาม sector เรียง sector ตามลำดับที่ปรากฏก่อน และเรียงหุ้นในกลุ่มตามป้าย"""
+    order: list[str] = []
+    by_sector: dict[str, list[dict]] = {}
+    for r in rows:
+        sec = r.get("sector", "อื่น ๆ")
+        if sec not in by_sector:
+            order.append(sec)
+            by_sector[sec] = []
+        by_sector[sec].append(r)
+    groups = []
+    for sec in order:
+        members = sort_rows(by_sector[sec])
+        counts = {"ซื้อ": 0, "สนใจ": 0, "รอ": 0, "ไม่มีข้อมูล": 0}
+        for r in members:
+            counts[r["label"] or "ไม่มีข้อมูล"] += 1
+        groups.append({"sector": sec, "rows": members, "counts": counts})
+    return groups
 
 
 def resolve_path(url_path: str, watch: list[dict], base_dir: Path) -> Path | None:

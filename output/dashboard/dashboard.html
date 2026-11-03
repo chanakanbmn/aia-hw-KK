@@ -23,7 +23,18 @@ button{font:inherit;border:1px solid var(--line);background:var(--card);color:va
 button:hover{border-color:var(--btn)}
 .legend span{display:inline-block;margin-right:10px;font-size:13px;color:var(--mut)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.list{display:flex;flex-direction:column;gap:12px}
+.list{display:flex;flex-direction:column;gap:18px}
+details.sec{border:0}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:4px 2px 10px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::before{content:"▾";color:var(--mut);font-size:14px}
+details.sec:not([open])>summary::before{content:"▸"}
+.sec-name{font-size:17px;font-weight:700}
+.sec-count{font-size:12px;color:var(--mut)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:700;border-radius:999px;padding:1px 9px;color:var(--bar-ink)}
+.chip.c-buy{background:var(--z3)} .chip.c-int{background:var(--z2)} .chip.c-wait{background:var(--out)} .chip.c-na{background:var(--none)}
+.group{display:flex;flex-direction:column;gap:12px}
 .row{border:1px solid var(--line);border-left:6px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--bg-c);
 display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(190px,1.5fr) minmax(130px,1fr) auto;gap:6px 16px;align-items:center}
 .z3{--c:var(--z3);--bg-c:var(--z3-bg);--ink-c:var(--z3-ink)}
@@ -111,28 +122,49 @@ function zoneBar(r) {
   const seg = (cls, w, txt, short) => w > 0.01 ? `<span class="${cls}" style="width:${w}%" title="${txt}">${w >= 11 ? txt : (w >= 5.5 ? short : "")}</span>` : "";
   const pos = r.price == null ? null : pct(r.price);
   const tag = r.price == null ? "" : `$${fmt(r.price)} [ยังไม่ยืนยัน] = ${esc(r.status)}`;
-  const left = pos == null ? 0 : Math.min(Math.max(pos, 14), 86);
+  // ข้อความยาวราว 230px: จำกัดจุดกึ่งกลางให้พอดีกับความกว้างแถบ (ลูกศรยังอยู่ที่ตำแหน่งจริงเสมอ)
+  const half = 120, w = document.querySelector(".list")?.clientWidth || 900;
+  const left = pos == null ? 0 : Math.min(Math.max(pos, half / w * 100), 100 - half / w * 100);
   return `<div class="zonebar"><div class="zb">${seg("s3", w3, `โซน 3 ≤ $${fmt(z.zone3_max, 1)}`, `≤ $${fmt(z.zone3_max, 1)}`)}${seg("s2", w2, `โซน 2 ≤ $${fmt(z.zone2_max, 1)}`, `≤ $${fmt(z.zone2_max, 1)}`)}${seg("s1", w1, `โซน 1 ≤ $${fmt(z.zone1_max, 1)}`, `≤ $${fmt(z.zone1_max, 1)}`)}${seg("so", wo, "", "")}</div>
     <div class="mk">${pos == null ? "" : `<b class="ar" style="left:${pos}%">▲</b><i style="left:${left}%">${tag}</i>`}</div></div>`;
 }
 
-function render(data) {
-  document.getElementById("sub").textContent = `อัปเดต ${data.fetched} · ${data.rows.length} ตัว`;
-  document.getElementById("list").innerHTML = data.rows.map(r => {
-    const gap = r.gap_pct == null ? "" : `ห่างจากโซนถัดไป ${(r.gap_pct * 100).toFixed(1)}%`;
-    const ch = r.spark_change, up = ch == null || ch >= 0;
-    const chg = ch == null ? "" : `<span class="chg ${up ? "up" : "down"}">3 เดือน ${(ch * 100).toFixed(1)}%</span>`;
-    const btn = r.has_infographic
-      ? `<a class="btn" href="/infographic/${encodeURIComponent(r.ticker)}" target="_blank" rel="noopener">ดู infographic</a>`
-      : `<span class="btn off">ยังไม่มี infographic</span>`;
-    return `<div class="row ${esc(r.zone_key)}">
+function rowHtml(r) {
+  const gap = r.gap_pct == null ? "" : `ห่างจากโซนถัดไป ${(r.gap_pct * 100).toFixed(1)}%`;
+  const ch = r.spark_change, up = ch == null || ch >= 0;
+  const chg = ch == null ? "" : `<span class="chg ${up ? "up" : "down"}">3 เดือน ${(ch * 100).toFixed(1)}%</span>`;
+  const btn = r.has_infographic
+    ? `<a class="btn" href="/infographic/${encodeURIComponent(r.ticker)}" target="_blank" rel="noopener">ดู infographic</a>`
+    : `<span class="btn off">ยังไม่มี infographic</span>`;
+  return `<div class="row ${esc(r.zone_key)}">
       <div><div class="tk">${esc(r.ticker)}</div><div class="nm">${esc(r.name)}</div><div class="small">${esc(r.note)}</div></div>
       <div><div class="pxrow"><div class="px">${fmt(r.price)}</div>${spark(r.spark, up)}</div><div class="small">${esc(r.price_date || "ดึงราคาไม่ได้")} ${chg}</div></div>
       <div><span class="pill">${esc(r.label || r.status)}</span><div class="small">${esc(gap)}</div></div>
       <div>${btn}</div>
       ${zoneBar(r)}
     </div>`;
+}
+
+function loadClosed() { try { return JSON.parse(localStorage.getItem("closedSectors") || "[]"); } catch { return []; } }
+function saveClosed(a) { try { localStorage.setItem("closedSectors", JSON.stringify(a)); } catch {} }
+
+function render(data) {
+  document.getElementById("sub").textContent = `อัปเดต ${data.fetched} · ${data.rows.length} ตัว · ${data.groups.length} sector`;
+  const closed = new Set(loadClosed());
+  document.getElementById("list").innerHTML = data.groups.map(g => {
+    const c = g.counts;
+    const chips = [["c-buy", "ซื้อ", c["ซื้อ"]], ["c-int", "สนใจ", c["สนใจ"]], ["c-wait", "รอ", c["รอ"]], ["c-na", "ไม่มีข้อมูล", c["ไม่มีข้อมูล"]]]
+      .filter(x => x[2] > 0).map(x => `<span class="chip ${x[0]}">${x[1]} ${x[2]}</span>`).join("");
+    return `<details class="sec" data-sector="${esc(g.sector)}" ${closed.has(g.sector) ? "" : "open"}>
+      <summary><span class="sec-name">${esc(g.sector)}</span><span class="sec-count">${g.rows.length} ตัว</span><span class="chips">${chips}</span></summary>
+      <div class="group">${g.rows.map(rowHtml).join("")}</div>
+    </details>`;
   }).join("");
+  document.querySelectorAll("details.sec").forEach(d => d.addEventListener("toggle", () => {
+    const set = new Set(loadClosed());
+    d.open ? set.delete(d.dataset.sector) : set.add(d.dataset.sector);
+    saveClosed([...set]);
+  }));
 }
 
 async function load() {

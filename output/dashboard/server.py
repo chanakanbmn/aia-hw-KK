@@ -13,7 +13,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1]))  # ราก repo เพื่อ import src/
-from src.dashboard import make_row, normalize_zones, resolve_path, sort_rows  # noqa: E402
+from src.dashboard import group_rows, make_row, normalize_zones, resolve_path  # noqa: E402
 
 PORT = 8770
 CACHE_SECONDS = 60
@@ -45,7 +45,7 @@ def get_rows() -> list[dict]:
         except Exception:
             price, day, closes = None, None, []  # ดึงไม่ได้ = สีเทา ไม่เดา
         rows.append(make_row(e, normalize_zones(e, HERE), price, day, date.today().isoformat(), spark=closes))
-    _cache.update(at=time.time(), rows=sort_rows(rows))
+    _cache.update(at=time.time(), rows=rows)
     return _cache["rows"]
 
 
@@ -65,7 +65,8 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             self._send(200, (HERE / "dashboard.html").read_bytes(), "text/html; charset=utf-8")
         elif path == "/api/rows":
-            body = {"rows": get_rows(), "fetched": datetime.now().strftime("%Y-%m-%d %H:%M")}
+            rows = get_rows()
+            body = {"rows": rows, "groups": group_rows(rows), "fetched": datetime.now().strftime("%Y-%m-%d %H:%M")}
             self._send(200, json.dumps(body, ensure_ascii=False), "application/json; charset=utf-8")
         else:
             f = resolve_path(path, load_watch(), HERE)

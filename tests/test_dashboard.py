@@ -109,3 +109,31 @@ def test_spark_change_pct():
     assert spark_change([100.0, 110.0]) == pytest.approx(0.10)
     assert spark_change([100.0]) is None
     assert spark_change([]) is None
+
+
+from src.dashboard import group_rows  # noqa: E402
+
+
+def _r(ticker, sector, label):
+    return {"ticker": ticker, "sector": sector, "label": label}
+
+
+def test_group_rows_keeps_sector_order_of_first_appearance():
+    rows = [_r("A", "ซอฟต์แวร์", "รอ"), _r("B", "การเงิน", "ซื้อ"), _r("C", "ซอฟต์แวร์", "สนใจ")]
+    groups = group_rows(rows)
+    assert [g["sector"] for g in groups] == ["ซอฟต์แวร์", "การเงิน"]
+
+
+def test_group_rows_sorts_within_sector_by_label():
+    rows = [_r("A", "S", "รอ"), _r("B", "S", None), _r("C", "S", "ซื้อ"), _r("D", "S", "สนใจ")]
+    assert [r["ticker"] for r in group_rows(rows)[0]["rows"]] == ["C", "D", "A", "B"]
+
+
+def test_group_rows_counts_labels_and_unknown():
+    rows = [_r("A", "S", "ซื้อ"), _r("B", "S", "สนใจ"), _r("C", "S", "รอ"), _r("D", "S", "รอ"), _r("E", "S", None)]
+    assert group_rows(rows)[0]["counts"] == {"ซื้อ": 1, "สนใจ": 1, "รอ": 2, "ไม่มีข้อมูล": 1}
+
+
+def test_make_row_sector_defaults_to_other():
+    assert make_row({"ticker": "AAA"}, Z, 110.0, "2026-11-02", TODAY)["sector"] == "อื่น ๆ"
+    assert make_row({"ticker": "AAA", "sector": "ซอฟต์แวร์"}, Z, 110.0, "2026-11-02", TODAY)["sector"] == "ซอฟต์แวร์"
