@@ -283,8 +283,10 @@ li{{margin:4px 0;font-size:13px}}
     <div class="src">สีเขียว/แดงตามทิศทาง YoY เท่านั้น · % และอัตราส่วนคำนวณจากตัวเลขในงบ · วันเก็บเงินโดยประมาณ = ลูกหนี้ ÷ รายได้ไตรมาส × 91 วัน (วิธีของเรา ไม่ใช่ตัวเลขบริษัท) · RPO ลดลงขณะรายได้โต ความหมายเอกสารไม่อธิบายในส่วนที่อ่าน (RPO เป็นยอดสัญญาที่ยังไม่รับรู้ ไม่ใช่ backlog ทั้งหมด)<br>[ที่มา: LRCX-FACTS.md แถว 25-32, 46-47, 50, 55-60, 74-75, 93-95, 110, 112, 114-118, 120, 123-124, 139-141, 144-146, 156 · 10-Q Q1 FY2027]</div>
   </section>
 
+<!--CANSLIM:START-->
+<!--CANSLIM:END-->
   <section class="card">
-    <h2><span class="num">7</span>Bear Case</h2>
+    <h2><span class="num">8</span>Bear Case</h2>
     <ul>
       <li><b>วัฏจักรการลงทุนอุปกรณ์ผลิตชิป:</b> 10-K (Item 1A) ระบุเองว่าอุตสาหกรรมอุปกรณ์ผลิตชิป "subject to variability and periods of rapid growth or decline" ในข้อมูลของเรา รายได้ FY2024 ลดลง {abs(C["rev_fy24_vs_fy23"]):.1f}% จาก FY2023{CM} และ FCF margin FY2022 ต่ำเหลือ {C["fcf_a_margin_fy"]["FY2022"]:.1f}%{CM} Item 1A ยังระบุผลที่ตามมาของขาลง เช่น สำรองลูกหนี้ สำรองสินค้าคงคลังล้าสมัย การด้อยค่า goodwill และภาระจากสินค้าที่สั่งซื้อไว้ล่วงหน้า</li>
       <li><b>รายได้จีนและข้อจำกัดส่งออก:</b> จีน 34% ของ FY2026 และ 35% ของ Q1 FY2027 (FY2024: 42%) 10-K ระบุว่าการขายในจีน "likely to be materially and adversely affected" จากข้อกำหนดใบอนุญาตส่งออกและมาตรการภาครัฐ เอกสารไม่ให้ตัวเลขดอลลาร์ของผลกระทบ จึงไม่ประเมิน</li>
@@ -315,3 +317,10 @@ li{{margin:4px 0;font-size:13px}}
 """
 OUT.write_text(HTML, encoding="utf-8")
 print("เขียน", OUT)
+
+# ใส่หัวข้อ CAN SLIM กลับเข้าหน้า (หน้านี้ถูกสร้างทั้งหน้า จึงต้องเรียกทุกครั้งที่สร้างใหม่)
+import importlib.util
+_spec = importlib.util.spec_from_file_location("build_canslim", HERE / "build_canslim.py")
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+_mod.inject(OUT)

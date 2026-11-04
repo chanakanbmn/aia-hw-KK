@@ -4,16 +4,18 @@
 
 | ไฟล์ | คืออะไร |
 |---|---|
-| `LRCX-infographic.html` | infographic 7 หัวข้อ (overview, takeaways, ราคา, valuation, โซนราคา, งบ Q1 FY2027, bear case) + ส่วนพับได้ "เทียบงบ 5 ปี" เปิดในเบราว์เซอร์ได้เลย (ไม่เรียกไฟล์ภายนอก) |
+| `LRCX-infographic.html` | infographic 8 หัวข้อ (overview, takeaways, ราคา, valuation, โซนราคา, งบ Q1 FY2027, CAN SLIM, bear case) + ส่วนพับได้ "เทียบงบ 5 ปี" เปิดในเบราว์เซอร์ได้เลย (ไม่เรียกไฟล์ภายนอก) |
 | `LRCX-5yr.html` | เทียบงบ FY2022–FY2026 + 12 เดือนถึง Q1 FY2027 พร้อมกราฟ สร้างด้วยสคริปต์ |
 | `LRCX.md` | โน้ตสรุปหน้าเดียว |
 | `LRCX-FACTS.md` | ตารางข้อเท็จจริง 183 แถว พร้อมไฟล์และบรรทัดต้นทาง (คัดลอกมาจากขั้นเก็บข้อเท็จจริง) |
 | `tools/calc_lrcx.py` | คำนวณมูลค่า (EV/FCF, EV/Sales, reverse DCF + ตารางความไว), สามฉาก, โซน (เรียก `src/zones.py` ซ้ำ), อัตราส่วนงบ Q1 เขียน `tools/calc_lrcx.json` |
 | `tools/build_infographic.py` | สร้างส่วนหลักของ infographic จาก `calc_lrcx.json` (ไม่กรอกตัวเลขมือ) |
+| `tools/build_canslim.py` | สร้างหัวข้อ CAN SLIM จาก `tools/canslim.json` ใส่ใน infographic ระหว่าง `<!--CANSLIM:START-->`/`<!--CANSLIM:END-->` และหัวข้อ 4.1 ใน `LRCX.md` (รันซ้ำได้ไม่สร้างซ้ำ) `build_infographic.py` เรียกไฟล์นี้ต่อท้ายเองทุกครั้งที่สร้างหน้าใหม่ จึงไม่หาย |
+| `tools/canslim.json` | ตัวเลข CAN SLIM จาก `src/canslim.py` ณ 2026-11-04 (ราคา/ดัชนี Yahoo แหล่งรอง ยังไม่ยืนยัน) |
 | `tools/build_5yr.py` | ดึงตัวเลขจาก `data/raw/LRCX.json` (SEC companyfacts) สร้าง `LRCX-5yr.html` และอัปเดตส่วนพับใน infographic ตรวจกับ LRCX-FACTS.md อัตโนมัติ 33 ค่า |
 | `ticker/` | หน้าติดตามราคาเทียบโซน 3/2/1 รันในเครื่อง: `cd output/LRCX/ticker` แล้ว `python -I server.py` เปิด http://127.0.0.1:8768 |
 
-ลำดับรันสร้างใหม่ (จากรากของ repo): `calc_lrcx.py` → `build_infographic.py` → `build_5yr.py` ด้วย `"D:/Let's go/.venv/Scripts/python.exe" -I output/LRCX/tools/<ไฟล์>`
+ลำดับรันสร้างใหม่ (จากรากของ repo): `calc_lrcx.py` → `build_infographic.py` (รวมขั้น CAN SLIM ในตัว) → `build_5yr.py` (แตะเฉพาะส่วน EXT5 ไม่ลบ CAN SLIM) ด้วย `"D:/Let's go/.venv/Scripts/python.exe" -I output/LRCX/tools/<ไฟล์>` · ถ้าแก้เฉพาะ CAN SLIM หรือ canslim.json รัน `build_canslim.py` เดี่ยว ๆ ได้ทุกเมื่อ (ต้องรันหลัง build_infographic.py เสมอถ้ารันแยก)
 
 ที่มาของตัวเลข: เอกสารที่บริษัทยื่นต่อ SEC (10-K FY2026, 10-K FY2025, 10-Q Q1 FY2027, DEF 14A) ผ่าน `LRCX-FACTS.md`; ตัวเลข 5 ปีมาจาก companyfacts.json (แต่ละงวดใช้ไฟล์ 10-K/10-Q ที่ยื่นล่าสุด, LTM = FY2026 − Q1 FY2026 + Q1 FY2027) ราคา 227.56 USD (ปิด 2 พ.ย. 2026) จุดสูง 52 สัปดาห์ 438.5 และราคาย้อนหลังมาจาก Yahoo Finance แบบไม่เป็นทางการ [ยังไม่ยืนยัน]
 
