@@ -113,3 +113,22 @@ def resolve_path(url_path: str, watch: list[dict], base_dir: Path) -> Path | Non
             p = (Path(base_dir) / e["infographic"]).resolve()
             return p if p.is_file() else None
     return None
+
+
+STATIC_CSP = (
+    "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
+    "img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'"
+)
+
+
+def render_static(template_html: str, payload: dict) -> str:
+    """ฝังข้อมูลลงหน้า dashboard เป็นไฟล์นิ่งที่เปิดได้โดยไม่ต้องมีเซิร์ฟเวอร์
+
+    หน้านิ่งมี CSP ห้ามเชื่อมต่อเครือข่ายทุกชนิด (connect-src 'none') เพื่อให้เห็นชัดว่าไม่ดึงข้อมูลจากที่ไหน
+    """
+    data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")  # กัน </script> ในข้อมูลปิดแท็กก่อนเวลา
+    csp = f'<meta http-equiv="Content-Security-Policy" content="{STATIC_CSP}">'
+    inject = f"<script>window.STATIC_DATA={data};</script>"
+    out = template_html.replace("<head>", "<head>" + csp, 1)
+    first_script = out.index("<script>")
+    return out[:first_script] + inject + out[first_script:]

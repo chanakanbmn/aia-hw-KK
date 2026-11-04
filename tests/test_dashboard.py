@@ -137,3 +137,27 @@ def test_group_rows_counts_labels_and_unknown():
 def test_make_row_sector_defaults_to_other():
     assert make_row({"ticker": "AAA"}, Z, 110.0, "2026-11-02", TODAY)["sector"] == "อื่น ๆ"
     assert make_row({"ticker": "AAA", "sector": "ซอฟต์แวร์"}, Z, 110.0, "2026-11-02", TODAY)["sector"] == "ซอฟต์แวร์"
+
+
+from src.dashboard import render_static  # noqa: E402
+
+TEMPLATE = "<html><head><title>t</title></head><body><script>var x=1;</script></body></html>"
+
+
+def test_render_static_embeds_payload_before_page_script():
+    out = render_static(TEMPLATE, {"rows": [], "groups": [], "fetched": "2026-11-04 09:00"})
+    assert "window.STATIC_DATA=" in out
+    assert out.index("window.STATIC_DATA=") < out.index("var x=1;")
+    assert "2026-11-04 09:00" in out
+
+
+def test_render_static_escapes_script_end_tag_in_data():
+    out = render_static(TEMPLATE, {"rows": [{"note": "</script><img src=x>"}], "groups": [], "fetched": "x"})
+    assert "</script><img" not in out  # ข้อมูลที่ฝังต้องปิด script ก่อนเวลาไม่ได้
+    assert out.count("</script>") == 2  # ของข้อมูลหนึ่ง + ของหน้าเดิมหนึ่ง
+
+
+def test_render_static_adds_content_security_policy_with_no_network():
+    out = render_static(TEMPLATE, {"rows": [], "groups": [], "fetched": "x"})
+    assert "Content-Security-Policy" in out
+    assert "connect-src 'none'" in out and "default-src 'none'" in out

@@ -58,6 +58,7 @@ a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px soli
 .mk{position:relative;height:38px;margin-top:1px}
 .mk b{position:absolute;top:0;transform:translateX(-50%);font-size:13px;line-height:15px;color:var(--ink-c)}
 .mk i{position:absolute;top:17px;transform:translateX(-50%);font-style:normal;font-size:12px;font-weight:700;color:var(--ink-c);white-space:nowrap}
+.banner{border:1px solid var(--z2);background:var(--z2-bg);color:var(--ink);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:13px}
 .foot{margin-top:18px;font-size:12px;color:var(--mut)}
 .err{color:var(--out-ink);font-size:13px}
 @media (max-width:760px){.row{grid-template-columns:1fr 1fr}.px{font-size:18px}}
@@ -66,6 +67,7 @@ a.btn{display:inline-block;text-decoration:none;color:var(--btn);border:1px soli
 <body>
 <main>
   <h1>Watchlist Dashboard</h1>
+  <div class="banner" id="banner" hidden></div>
   <div class="sub" id="sub">กำลังโหลด…</div>
   <div class="bar">
     <button id="refresh">รีเฟรช</button>
@@ -134,7 +136,7 @@ function rowHtml(r) {
   const ch = r.spark_change, up = ch == null || ch >= 0;
   const chg = ch == null ? "" : `<span class="chg ${up ? "up" : "down"}">3 เดือน ${(ch * 100).toFixed(1)}%</span>`;
   const btn = r.has_infographic
-    ? `<a class="btn" href="/infographic/${encodeURIComponent(r.ticker)}" target="_blank" rel="noopener">ดู infographic</a>`
+    ? `<a class="btn" href="${esc(r.infographic_url || ("/infographic/" + encodeURIComponent(r.ticker)))}" target="_blank" rel="noopener">ดู infographic</a>`
     : `<span class="btn off">ยังไม่มี infographic</span>`;
   return `<div class="row ${esc(r.zone_key)}">
       <div><div class="tk">${esc(r.ticker)}</div><div class="nm">${esc(r.name)}</div><div class="small">${esc(r.note)}</div></div>
@@ -167,7 +169,10 @@ function render(data) {
   }));
 }
 
+const STATIC = typeof window.STATIC_DATA !== "undefined";
+
 async function load() {
+  if (STATIC) { render(window.STATIC_DATA); return; }
   try {
     const res = await fetch("/api/rows", {cache: "no-store"});
     const data = await res.json();
@@ -178,15 +183,26 @@ async function load() {
   }
 }
 
-document.getElementById("refresh").onclick = load;
-document.getElementById("notify").onclick = async () => {
-  if (!("Notification" in window)) return alert("เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน");
-  const p = await Notification.requestPermission();
-  document.getElementById("notify").textContent = p === "granted" ? "แจ้งเตือนเปิดอยู่" : "ไม่ได้รับอนุญาตแจ้งเตือน";
-};
-if ("Notification" in window && Notification.permission === "granted") document.getElementById("notify").textContent = "แจ้งเตือนเปิดอยู่";
+if (STATIC) {
+  // หน้านิ่งสำหรับแชร์: ข้อมูล ณ เวลาที่สร้างไฟล์ ไม่ดึงราคาสด ไม่มีปุ่มรีเฟรช/แจ้งเตือน
+  document.getElementById("refresh").hidden = true;
+  document.getElementById("notify").hidden = true;
+  const b = document.getElementById("banner");
+  b.hidden = false;
+  b.textContent = `ข้อมูล ณ ${window.STATIC_DATA.fetched} (ภาพนิ่ง ไม่ใช่ราคาสด) · ราคาจาก Yahoo Finance แบบไม่เป็นทางการ [ยังไม่ยืนยัน] · โซนและป้ายมาจากกฎของผู้จัดทำเพื่อการศึกษา ไม่ใช่คำแนะนำลงทุน`;
+  const foot = document.querySelector(".foot");
+  if (foot) foot.textContent = "ป้ายมาจากกฎโซน (ราคาที่ทำให้มัลติเพิลเท่าระดับล่างของช่วงในอดีตของหุ้นตัวเอง) ไม่ได้รวมคุณภาพธุรกิจหรือข่าว อ่าน infographic ประกอบเสมอ ราคาเป็นแหล่งรองและอาจล่าช้า ผลงานนี้เป็นการบ้านเพื่อการศึกษา (draft) ไม่ใช่คำแนะนำลงทุน";
+} else {
+  document.getElementById("refresh").onclick = load;
+  document.getElementById("notify").onclick = async () => {
+    if (!("Notification" in window)) return alert("เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน");
+    const p = await Notification.requestPermission();
+    document.getElementById("notify").textContent = p === "granted" ? "แจ้งเตือนเปิดอยู่" : "ไม่ได้รับอนุญาตแจ้งเตือน";
+  };
+  if ("Notification" in window && Notification.permission === "granted") document.getElementById("notify").textContent = "แจ้งเตือนเปิดอยู่";
+}
 load();
-setInterval(load, REFRESH_MS);
+if (!STATIC) setInterval(load, REFRESH_MS);
 </script>
 </body>
 </html>
