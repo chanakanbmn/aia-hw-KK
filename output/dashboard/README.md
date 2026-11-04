@@ -17,7 +17,7 @@
 dashboard ที่รันด้วย `server.py` ฟังเฉพาะในเครื่องคุณ คนอื่นเปิดไม่ได้ ถ้าจะแชร์ให้สร้างหน้านิ่ง:
 
 ```bash
-"D:\Let's go\.venv\Scripts\python.exe" -I output\dashboarduild_static.py
+"D:\Let's go\.venv\Scripts\python.exe" -I output\dashboard\build_static.py
 ```
 
 ได้ `output/dashboard/public.html` (ฝังข้อมูล ณ เวลาที่รัน เปิดได้โดยไม่ต้องมีเซิร์ฟเวอร์) และ `index.html` ที่รากของ repo ที่พาไปหน้านั้น เมื่อเปิด GitHub Pages (Settings → Pages → Branch `main` โฟลเดอร์ `/ (root)`) ลิงก์จะเป็น `https://chanakanbmn.github.io/aia-hw-KK/`
