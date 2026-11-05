@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beat the crisis · KK · กลุ่ม 4</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;--btn:#2b6cb0;--warn-bg:#fdf3dc;--warn:#e3b34a}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mut:#9aa3b2;--line:#2c3340;--btn:#7fb2f0;--warn-bg:#332a14;--warn:#e8c06a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:18px;margin:28px 0 10px}
+.sub{color:var(--mut);margin:0 0 16px}
+.note{border:1px solid var(--warn);background:var(--warn-bg);border-radius:10px;padding:10px 14px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin:0 0 4px;font-size:16px}
+.card p{margin:0 0 8px;color:var(--mut);font-size:14px}
+a{color:var(--btn);text-decoration:none}
+a:hover{text-decoration:underline}
+.links a{display:inline-block;margin:0 10px 4px 0;font-size:14px}
+.big{display:inline-block;background:var(--btn);color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;margin:4px 0 6px}
+.big:hover{text-decoration:none;opacity:.9}
+footer{margin-top:28px;color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Beat the crisis</h1>
+  <p class="sub">การบ้าน AI Investor Alpha · KK · กลุ่ม 4 · Macro / วิกฤต / Defensive</p>
+
+  <p>ใช้ AI ช่วยกำหนดโซนราคาที่น่าสนใจของหุ้นโตสูงไว้ล่วงหน้า พร้อมเหตุผลที่ตรวจย้อนได้ เพื่อตัดสินใจซื้อได้เมื่อราคาร่วงในช่วงวิกฤตหรือสงคราม</p>
+
+  <p><a class="big" href="output/dashboard/public.html">เปิด Watchlist Dashboard</a><br>
+  <span class="sub">8 ตัว จัดกลุ่มตาม sector · ราคา ป้าย ซื้อ/สนใจ/รอ แถบโซน sparkline · กดปุ่มในแต่ละแถวเพื่อดู infographic</span></p>
+
+  <div class="note">ทุกหน้าเป็น <b>draft เพื่อการศึกษา ไม่ใช่คำแนะนำลงทุน</b> · ราคามาจาก Yahoo Finance แบบไม่เป็นทางการ (แหล่งรอง) [ยังไม่ยืนยัน] · โซนและสามฉากเป็นสมมติฐานของผู้จัดทำ · หน้า dashboard บนลิงก์นี้เป็นภาพนิ่ง ณ เวลาที่สร้าง (แสดงวันที่ข้อมูลที่หัวหน้า)</div>
+
+  <h2>Infographic และ deep dive รายหุ้น</h2>
+  <div class="grid">
+    <div class="card"><h3>NOW · ServiceNow</h3><p>ซอฟต์แวร์องค์กร</p><div class="links">
+      <a href="output/NOW/NOW-infographic.html">Infographic + CAN SLIM</a><a href="output/NOW/NOW-5yr.html">เทียบงบ 5 ปี</a><a href="output/NOW/NOW-deepdive-2026-11-02.html">Deep dive</a></div></div>
+    <div class="card"><h3>INTU · Intuit</h3><p>ซอฟต์แวร์การเงินและภาษี</p><div class="links">
+      <a href="output/INTU/INTU-infographic.html">Infographic + CAN SLIM</a><a href="output/INTU/INTU-5yr.html">เทียบงบ 5 ปี</a><a href="output/INTU/INTU-deepdive-2026-11-02.html">Deep dive</a></div></div>
+    <div class="card"><h3>LRCX · Lam Research</h3><p>อุปกรณ์ผลิตชิป (ธุรกิจวัฏจักร)</p><div class="links">
+      <a href="output/LRCX/LRCX-infographic.html">Infographic + CAN SLIM</a><a href="output/LRCX/LRCX-5yr.html">เทียบงบ 5 ปี</a></div></div>
+    <div class="card"><h3>BX · Blackstone</h3><p>Alternative asset manager</p><div class="links">
+      <a href="output/BX/BX-infographic.html">Infographic</a><a href="output/BX/BX-5yr.html">เทียบงบ 5 ปี</a></div></div>
+  </div>
+  <p class="sub" style="margin-top:10px">NTNX, S, KVYO, ZETA มีตัวเลขใน dashboard และ <a href="output/watchlist.html">ตาราง watchlist</a> แต่ยังไม่มี infographic</p>
+
+  <h2>เอกสารโปรเจกต์ (เปิดบน GitHub)</h2>
+  <div class="links">
+    <a href="https://github.com/chanakanbmn/aia-hw-KK/blob/main/README.md">README</a>
+    <a href="https://github.com/chanakanbmn/aia-hw-KK/blob/main/spec.md">spec.md (โจทย์ 5 หัวข้อ)</a>
+    <a href="https://github.com/chanakanbmn/aia-hw-KK/blob/main/prompts.md">prompts.md (บันทึกทุกรอบ)</a>
+    <a href="https://github.com/chanakanbmn/aia-hw-KK/blob/main/PROJECT_MEMORY.md">PROJECT_MEMORY.md (บทเรียน)</a>
+    <a href="https://github.com/chanakanbmn/aia-hw-KK/blob/main/help.md">help.md (ติดตรงไหน)</a>
+    <a href="https://github.com/chanakanbmn/aia-hw-KK/tree/main/output/snapshots">snapshot คำแนะนำ</a>
+    <a href="https://github.com/chanakanbmn/aia-hw-KK">repo ทั้งหมด</a>
+  </div>
+
+  <footer>หน้า ticker ของแต่ละหุ้นและ dashboard แบบสดต้องรันเซิร์ฟเวอร์ในเครื่อง จึงไม่เปิดบนลิงก์นี้ ใช้ dashboard ภาพนิ่งด้านบนแทน</footer>
+</main>
+</body>
+</html>

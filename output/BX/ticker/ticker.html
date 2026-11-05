@@ -134,5 +134,13 @@ document.getElementById('sound').onclick = e => {
   refresh(); setInterval(refresh, REFRESH_MS);
 })();
 </script>
+<div id="servernotice" hidden style="border:1px solid #c53030;border-radius:8px;padding:10px 14px;margin:14px 0;font-size:14px">
+  <b>หน้านี้ต้องรันในเครื่อง:</b> ข้อมูลสดมาจากเซิร์ฟเวอร์ในเครื่อง (<code>python -I server.py</code> ในโฟลเดอร์ ticker แล้วเปิด http://127.0.0.1) จึงไม่แสดงบน GitHub Pages
+  ดูเวอร์ชันภาพนิ่งของ watchlist ได้ที่ <a href="../../dashboard/public.html">dashboard (public.html)</a>
+</div>
+<script>
+fetch("/api/zones").then(function (r) { if (!r.ok) document.getElementById("servernotice").hidden = false; })
+  .catch(function () { document.getElementById("servernotice").hidden = false; });
+</script>
 </body>
 </html>

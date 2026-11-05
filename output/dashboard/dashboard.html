@@ -179,7 +179,7 @@ async function load() {
     render(data);
     alertChanges(data.rows);
   } catch (e) {
-    document.getElementById("sub").innerHTML = '<span class="err">โหลดข้อมูลไม่ได้ ตรวจว่าเซิร์ฟเวอร์ยังรันอยู่</span>';
+    document.getElementById("sub").innerHTML = '<span class="err">โหลดข้อมูลไม่ได้ หน้านี้ต้องรันด้วยเซิร์ฟเวอร์ในเครื่อง (python -I output/dashboard/server.py) ดูเวอร์ชันภาพนิ่งได้ที่ <a href="public.html">public.html</a></span>';
   }
 }
 
