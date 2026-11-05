@@ -2,12 +2,14 @@
 
 > การบ้าน AI Investor Alpha · Day 1 → Day 2
 
+### 👉 เปิดดูผลงานจากลิงก์เดียว (ไม่ต้อง clone ไม่ต้องติดตั้ง ไม่ต้องล็อกอิน): **https://chanakanbmn.github.io/aia-hw-KK/**
+
 | | |
 |---|---|
 | **ชื่อเล่น** | KK |
 | **กลุ่ม** | กลุ่ม 4 · Macro / วิกฤต / Defensive |
 | **โจทย์ 1 บรรทัด** | ใช้ AI ช่วยกำหนดโซนราคาที่น่าสนใจของหุ้นโตสูงไว้ล่วงหน้า พร้อมเหตุผลที่ตรวจย้อนได้ เพื่อตัดสินใจซื้อได้เมื่อราคาร่วงในช่วงวิกฤตหรือสงคราม |
-| **ลิงก์ผลงาน** | ดูใน `output/` · dashboard: `output/dashboard/` (รันในเครื่อง ดู README ในโฟลเดอร์) · deep dive: `output/NOW/`, `output/INTU/`, `output/LRCX/` |
+| **ลิงก์ผลงาน** | [หน้ารวมผลงาน](https://chanakanbmn.github.io/aia-hw-KK/) · [Watchlist Dashboard](https://chanakanbmn.github.io/aia-hw-KK/output/dashboard/public.html) (ภาพนิ่ง) · ไฟล์ต้นทางใน `output/` (`NOW/`, `INTU/`, `LRCX/`, `BX/`, `snapshots/`) |
 | **สถานะ** | พร้อมตรวจ (ตัวเลขทุกชิ้นยังเป็น draft: ราคามาจากแหล่งรอง Yahoo และสมมติฐานฉากเป็นของผู้วิเคราะห์) |
 
 ---
